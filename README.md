@@ -1,11 +1,10 @@
-# CLV Insights - Customer Lifetime Value Simulator
+# Revenue Simulator - E-commerce Business Calculator
 
-A comprehensive e-commerce revenue and customer lifetime value (CLV) simulator built with React, TypeScript, and Tailwind CSS.
+A comprehensive e-commerce revenue simulator built with React, TypeScript, and Tailwind CSS. Calculate your business potential with visual analytics and professional reporting.
 
 ## 🚀 Features
 
 - **Revenue Calculator**: Calculate monthly revenue based on visitors, conversion rates, and cart values
-- **CLV Analysis**: Advanced customer lifetime value calculations with churn adjustment
 - **Visual Analytics**: Interactive charts and graphs using Recharts
 - **Multi-language Support**: English and French localization
 - **PDF Export**: Generate professional reports with jsPDF
@@ -27,7 +26,7 @@ A comprehensive e-commerce revenue and customer lifetime value (CLV) simulator b
 1. Clone the repository:
 ```bash
 git clone <your-repo-url>
-cd clv-insights
+cd revenue-simulator
 ```
 
 2. Install dependencies:
@@ -48,9 +47,8 @@ npm run build
 ## 🎯 Usage
 
 1. **Revenue Calculator**: Enter your business metrics (monthly visitors, conversion rate, average cart value, costs)
-2. **CLV Analysis**: Input customer data (order value, purchase frequency, lifespan, acquisition cost)
-3. **View Results**: Get detailed analytics with visual charts
-4. **Export Reports**: Generate PDF reports or share results
+2. **View Results**: Get detailed analytics with visual charts
+3. **Export Reports**: Generate PDF reports or share results
 
 ## 🌐 Live Demo
 
@@ -61,10 +59,8 @@ Visit the live application: [https://storeino-revenu.netlify.app](https://storei
 - Gross Revenue
 - Net Revenue
 - Profit Margin
-- Customer Lifetime Value (CLV)
-- Return on Investment (ROI)
-- Payback Period
-- Churn-adjusted CLV
+- Monthly Profit
+- 12-Month Projections
 
 ## 🔧 Configuration
 
