@@ -155,7 +155,11 @@ class StoreinoApiService {
     
     const response = await this.makeRequest<StoreinoAuthResponse>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials)
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password,
+        module: 'merchant'
+      })
     });
 
     console.log('Login response:', response);
