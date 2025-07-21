@@ -52,44 +52,41 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-200">
+    <div className="bg-white rounded-2xl shadow-xl p-4 border border-slate-200">
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 rounded-xl shadow-lg">
-            <TrendingUp className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-center space-x-2 mb-3">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-2 rounded-lg shadow-lg">
+            <TrendingUp className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
             {language === 'en' ? 'Revenue Analytics' : 'Analyse des Revenus'}
           </h3>
         </div>
-        <p className="text-slate-600">
-          {language === 'en' ? 'Visual insights into your business performance' : 'Aperçus visuels de la performance de votre entreprise'}
-        </p>
       </div>
 
-      {/* Compact Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* Ultra Compact Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
         {/* Revenue Growth Chart */}
-        <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex items-center space-x-2 mb-4">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
-            <h4 className="text-lg font-bold text-slate-800">
+        <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-lg p-3 border border-blue-100">
+          <div className="flex items-center space-x-1 mb-2">
+            <TrendingUp className="w-4 h-4 text-blue-600" />
+            <h4 className="text-sm font-bold text-slate-800">
               {language === 'en' ? '6-Month Projection' : 'Projection 6 Mois'}
             </h4>
           </div>
-          <div className="h-48">
+          <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                 <XAxis 
                   dataKey="month" 
                   stroke="#64748B"
-                  fontSize={10}
+                  fontSize={8}
                   fontWeight={500}
                 />
                 <YAxis 
                   stroke="#64748B"
-                  fontSize={10}
+                  fontSize={8}
                   fontWeight={500}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                 />
@@ -98,17 +95,17 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
                   type="monotone" 
                   dataKey="grossRevenue" 
                   stroke="#3B82F6" 
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   name={language === 'en' ? 'Gross Revenue' : 'Revenus Bruts'}
-                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 3 }}
+                  dot={{ fill: '#3B82F6', strokeWidth: 1, r: 2 }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="netRevenue" 
                   stroke="#10B981" 
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   name={language === 'en' ? 'Net Revenue' : 'Revenus Nets'}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 3 }}
+                  dot={{ fill: '#10B981', strokeWidth: 1, r: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -116,26 +113,26 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
         </div>
 
         {/* Revenue Breakdown Pie Chart */}
-        <div className="bg-gradient-to-br from-purple-50 to-slate-50 rounded-xl p-6 border border-purple-100">
-          <div className="flex items-center space-x-2 mb-4">
-            <PieChartIcon className="w-6 h-6 text-purple-600" />
-            <h4 className="text-lg font-bold text-slate-800">
+        <div className="bg-gradient-to-br from-purple-50 to-slate-50 rounded-lg p-3 border border-purple-100">
+          <div className="flex items-center space-x-1 mb-2">
+            <PieChartIcon className="w-4 h-4 text-purple-600" />
+            <h4 className="text-sm font-bold text-slate-800">
               {language === 'en' ? 'Revenue Breakdown' : 'Répartition Revenus'}
             </h4>
           </div>
-          <div className="h-48">
+          <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={profitabilityData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
+                  outerRadius={45}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
-                  fontSize={11}
+                  fontSize={8}
                 >
                   {profitabilityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -148,29 +145,28 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* Monthly Profit Bar Chart - Full Width */}
-      <div className="bg-gradient-to-br from-green-50 to-slate-50 rounded-xl p-6 border border-green-100 mb-8">
-        <div className="flex items-center space-x-2 mb-4">
-          <BarChart3 className="w-6 h-6 text-green-600" />
-          <h4 className="text-lg font-bold text-slate-800">
+        {/* Monthly Profit Bar Chart */}
+        <div className="bg-gradient-to-br from-green-50 to-slate-50 rounded-lg p-3 border border-green-100">
+          <div className="flex items-center space-x-1 mb-2">
+            <BarChart3 className="w-4 h-4 text-green-600" />
+            <h4 className="text-sm font-bold text-slate-800">
             {language === 'en' ? 'Monthly Profit Growth' : 'Croissance Bénéfice Mensuel'}
           </h4>
         </div>
-        <div className="h-48">
+          <div className="h-32">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
               <XAxis 
                 dataKey="month" 
                 stroke="#64748B"
-                fontSize={10}
+                fontSize={8}
                 fontWeight={500}
               />
               <YAxis 
                 stroke="#64748B"
-                fontSize={10}
+                fontSize={8}
                 fontWeight={500}
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
@@ -184,23 +180,24 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
             </BarChart>
           </ResponsiveContainer>
         </div>
+        </div>
       </div>
 
       {/* Compact Key Performance Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-gradient-to-br from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
-          <h5 className="text-sm font-bold mb-1">
+          <h5 className="text-xs font-bold mb-1">
             {language === 'en' ? 'Annual Projection' : 'Projection Annuelle'}
           </h5>
-          <p className="text-2xl font-bold">
+          <p className="text-lg font-bold">
             {formatCurrency(results.grossRevenue * 12 * 1.3)}
           </p>
         </div>
         <div className="bg-gradient-to-br from-green-600 to-green-500 text-white p-4 rounded-xl shadow-lg">
-          <h5 className="text-sm font-bold mb-1">
+          <h5 className="text-xs font-bold mb-1">
             {language === 'en' ? 'Break-even' : 'Seuil Rentabilité'}
           </h5>
-          <p className="text-2xl font-bold">
+          <p className="text-lg font-bold">
             {results.monthlyProfit > 0 ? 
               (language === 'en' ? 'Achieved' : 'Atteint') : 
               (language === 'en' ? 'Not Reached' : 'Non Atteint')
@@ -208,10 +205,10 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ results, language })
           </p>
         </div>
         <div className="bg-gradient-to-br from-purple-600 to-purple-500 text-white p-4 rounded-xl shadow-lg">
-          <h5 className="text-sm font-bold mb-1">
+          <h5 className="text-xs font-bold mb-1">
             {language === 'en' ? 'ROI Potential' : 'Potentiel ROI'}
           </h5>
-          <p className="text-2xl font-bold">
+          <p className="text-lg font-bold">
             {results.profitMargin > 0 ? `${results.profitMargin.toFixed(1)}%` : '0%'}
           </p>
         </div>
