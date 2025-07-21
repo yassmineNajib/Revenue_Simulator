@@ -153,7 +153,7 @@ class StoreinoApiService {
   async authenticateMerchant(credentials: StoreinoMerchantAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
     console.log('Attempting login to:', `${STOREINO_API_BASE}/auth/login`);
     
-    const response = await this.makeRequest<StoreinoAuthResponse>('/api/auth/login', {
+    const response = await this.makeRequest<StoreinoAuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({
         email: credentials.email,
