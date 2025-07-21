@@ -1,13 +1,15 @@
 import React from 'react';
-import { TrendingUp, Globe } from 'lucide-react';
-import { Language } from '../types';
+import { TrendingUp, Globe, LogOut, User } from 'lucide-react';
+import { Language, MerchantData } from '../types';
 
 interface HeaderProps {
   language: Language;
   onLanguageChange: (language: Language) => void;
+  merchant?: MerchantData | null;
+  onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ language, onLanguageChange }) => {
+export const Header: React.FC<HeaderProps> = ({ language, onLanguageChange, merchant, onLogout }) => {
   return (
     <header className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white py-16 relative overflow-hidden">
       <div className="absolute inset-0 bg-blue-600 bg-opacity-10"></div>
@@ -31,28 +33,46 @@ export const Header: React.FC<HeaderProps> = ({ language, onLanguageChange }) =>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3 bg-blue-600 bg-opacity-30 backdrop-blur-sm rounded-2xl p-2 border border-blue-400 border-opacity-30">
-            <Globe className="w-5 h-5 text-blue-300" />
-            <button
-              onClick={() => onLanguageChange('en')}
-              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                language === 'en'
-                  ? 'bg-white text-blue-900 shadow-xl transform scale-105'
-                  : 'text-blue-200 hover:text-white hover:bg-blue-600 hover:bg-opacity-50'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => onLanguageChange('fr')}
-              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                language === 'fr'
-                  ? 'bg-white text-blue-900 shadow-xl transform scale-105'
-                  : 'text-blue-200 hover:text-white hover:bg-blue-600 hover:bg-opacity-50'
-              }`}
-            >
-              FR
-            </button>
+          <div className="flex items-center space-x-4">
+            {merchant && (
+              <div className="flex items-center space-x-3 bg-blue-600 bg-opacity-30 backdrop-blur-sm rounded-2xl p-3 border border-blue-400 border-opacity-30">
+                <User className="w-5 h-5 text-blue-300" />
+                <span className="text-blue-200 font-medium">{merchant.name}</span>
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="text-blue-200 hover:text-white hover:bg-blue-600 hover:bg-opacity-50 p-2 rounded-lg transition-all duration-300"
+                    title={language === 'en' ? 'Logout' : 'Déconnexion'}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-3 bg-blue-600 bg-opacity-30 backdrop-blur-sm rounded-2xl p-2 border border-blue-400 border-opacity-30">
+              <Globe className="w-5 h-5 text-blue-300" />
+              <button
+                onClick={() => onLanguageChange('en')}
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  language === 'en'
+                    ? 'bg-white text-blue-900 shadow-xl transform scale-105'
+                    : 'text-blue-200 hover:text-white hover:bg-blue-600 hover:bg-opacity-50'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => onLanguageChange('fr')}
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  language === 'fr'
+                    ? 'bg-white text-blue-900 shadow-xl transform scale-105'
+                    : 'text-blue-200 hover:text-white hover:bg-blue-600 hover:bg-opacity-50'
+                }`}
+              >
+                FR
+              </button>
+            </div>
           </div>
         </div>
         

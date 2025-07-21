@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
+import { MerchantLogin } from './components/MerchantLogin';
 import { InputForm } from './components/InputForm';
 import { ResultsDisplay } from './components/ResultsDisplay';
 import { RevenueChart } from './components/RevenueChart';
 import { ActionButtons } from './components/ActionButtons';
 import { SimulationInputs, SimulationResults, Language } from './types';
 import { calculateRevenue } from './utils/calculations';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
   const [language, setLanguage] = useState<Language>('en');
+  const { isAuthenticated, merchant, login, logout, loading, error } = useAuth();
   const [inputs, setInputs] = useState<SimulationInputs>({
     monthlyVisitors: 0,
     conversionRate: 0,
@@ -18,6 +21,18 @@ function App() {
   });
   const [results, setResults] = useState<SimulationResults | null>(null);
 
+  // Auto-populate inputs when merchant data is available
+  React.useEffect(() => {
+    if (merchant && merchant.metrics) {
+      setInputs({
+        monthlyVisitors: merchant.metrics.monthlyVisitors,
+        conversionRate: merchant.metrics.conversionRate,
+        averageCartValue: merchant.metrics.averageCartValue,
+        storeinoFees: 390, // Default to Pro plan, could be dynamic based on merchant.plan
+        otherCosts: 0
+      });
+    }
+  }, [merchant]);
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
   };
@@ -61,11 +76,39 @@ function App() {
     }
   };
 
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <MerchantLogin language={language} onLogin={login} loading={loading} error={error} />;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <Header language={language} onLanguageChange={setLanguage} />
+      <Header 
+        language={language} 
+        onLanguageChange={setLanguage}
+        merchant={merchant}
+        onLogout={logout}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+        {merchant && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">
+                  {language === 'en' ? 'Welcome back,' : 'Bon retour,'} {merchant.name}!
+                </h3>
+                <p className="text-slate-600">
+                  {merchant.storeUrl} • {language === 'en' ? 'Last updated:' : 'Dernière mise à jour:'} {new Date(merchant.lastUpdated).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-600">{language === 'en' ? 'Current Plan' : 'Plan Actuel'}</p>
+                <p className="font-bold text-blue-600 capitalize">{merchant.plan}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <InputForm
           inputs={inputs}
           onInputChange={handleInputChange}
