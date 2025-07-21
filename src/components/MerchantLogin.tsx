@@ -113,11 +113,13 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
 
           <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <p className="text-blue-700 text-sm font-medium mb-2">
-              {language === 'en' ? '🚀 Demo Account:' : '🚀 Compte Démo:'}
+              {language === 'en' ? '🔐 Storeino Login:' : '🔐 Connexion Storeino:'}
             </p>
             <p className="text-blue-600 text-xs">
-              Email: demo@storeino.com<br />
-              Password: demo123
+              {language === 'en' 
+                ? 'Use your real Storeino merchant credentials' 
+                : 'Utilisez vos identifiants marchands Storeino réels'
+              }
             </p>
           </div>
         </div>
