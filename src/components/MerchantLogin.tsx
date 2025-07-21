@@ -53,7 +53,10 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-              <p className="text-red-700 text-sm font-medium">{error}</p>
+              <div className="text-red-700 text-sm">
+                <p className="font-medium mb-2">Login Error:</p>
+                <p className="text-xs break-words">{error}</p>
+              </div>
             </div>
           )}
 

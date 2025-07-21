@@ -74,6 +74,7 @@ class StoreinoApiService {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Access-Control-Allow-Origin': '*',
         ...options.headers as Record<string, string>,
       };
 
@@ -85,9 +86,26 @@ class StoreinoApiService {
       const response = await fetch(`${STOREINO_API_BASE}${endpoint}`, {
         ...options,
         headers,
+        mode: 'cors',
       });
 
-      const data = await response.json();
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // If not JSON, get text to see what we're actually receiving
+        const textResponse = await response.text();
+        console.error('Non-JSON response received:', textResponse);
+        
+        return {
+          success: false,
+          data: null as T,
+          error: `API returned non-JSON response. Status: ${response.status}. Content: ${textResponse.substring(0, 200)}...`
+        };
+      }
       
       if (!response.ok) {
         return {
@@ -133,11 +151,15 @@ class StoreinoApiService {
 
   // Authenticate merchant with Storeino
   async authenticateMerchant(credentials: StoreinoMerchantAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
+    console.log('Attempting login to:', `${STOREINO_API_BASE}/auth/login`);
+    
     const response = await this.makeRequest<StoreinoAuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials)
     });
 
+    console.log('Login response:', response);
+    
     if (response.success && response.data) {
       // Save the access token
       this.saveToken(response.data.access_token, response.data.expires_in);
