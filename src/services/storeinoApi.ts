@@ -1,7 +1,7 @@
 // Storeino API Integration Service
 // Real API implementation for https://api-stores.storeino.com
 
-const STOREINO_API_BASE = 'https://api-stores.storeino.com';
+const STOREINO_API_BASE = '/api';
 
 export interface StoreinoApiResponse<T> {
   success: boolean;
