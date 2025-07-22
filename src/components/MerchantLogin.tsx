@@ -59,13 +59,25 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
                   {language === 'en' ? 'Authentication Error:' : 'Erreur d\'Authentification:'}
                 </p>
                 <p className="text-xs break-words">{error}</p>
-                {error.includes('Cannot GET') && (
+                {(error.includes('Cannot GET') || error.includes('CORS')) && (
                   <p className="text-xs mt-2 text-red-600">
                     {language === 'en' 
-                      ? '💡 Tip: Check if your credentials are correct and the API is accessible'
-                      : '💡 Conseil: Vérifiez si vos identifiants sont corrects et l\'API est accessible'
+                      ? '💡 Tip: This appears to be a CORS (Cross-Origin) error. The Storeino API may need to whitelist this domain, or you may need to use a proxy server.'
+                      : '💡 Conseil: Ceci semble être une erreur CORS. L\'API Storeino doit peut-être autoriser ce domaine, ou vous devez utiliser un serveur proxy.'
                     }
                   </p>
+                )}
+                {error.includes('Network Error') && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-yellow-700 text-xs font-medium mb-1">
+                      {language === 'en' ? 'Possible Solutions:' : 'Solutions Possibles:'}
+                    </p>
+                    <ul className="text-yellow-600 text-xs space-y-1">
+                      <li>• {language === 'en' ? 'Contact Storeino to whitelist your domain' : 'Contactez Storeino pour autoriser votre domaine'}</li>
+                      <li>• {language === 'en' ? 'Use a CORS proxy or backend server' : 'Utilisez un proxy CORS ou serveur backend'}</li>
+                      <li>• {language === 'en' ? 'Check if API endpoint URL is correct' : 'Vérifiez si l\'URL de l\'API est correcte'}</li>
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>
