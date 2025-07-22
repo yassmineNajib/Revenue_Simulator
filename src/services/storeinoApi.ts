@@ -165,15 +165,11 @@ class StoreinoApiService {
 
   // Authenticate with clientId and clientSecret
   async authenticateClient(credentials: StoreinoClientAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
-    const endpoint = `/v1/stores/authentication`;
+    const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(credentials.clientId)}&clientSecret=${encodeURIComponent(credentials.clientSecret)}`;
     console.log('Attempting authentication to:', `${STOREINO_API_BASE}${endpoint}`);
     
     const response = await this.makeRequest<StoreinoAuthResponse>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify({
-        clientId: credentials.clientId,
-        clientSecret: credentials.clientSecret
-      })
+      method: 'GET'
     });
 
     console.log('Authentication response:', response);
