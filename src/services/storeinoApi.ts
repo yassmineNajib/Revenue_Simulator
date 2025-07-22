@@ -42,31 +42,30 @@ export interface StoreinoStoreMetrics {
 export interface StoreinoAuthResponse {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-    stores: StoreinoStoreData[];
-  };
+  expireTime: number;
 }
 
 class StoreinoApiService {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private tokenExpiry: number | null = null;
+  private clientId: string | null = null;
+  private clientSecret: string | null = null;
 
   constructor() {
     // Try to restore tokens from localStorage
     const savedAccessToken = localStorage.getItem('storeino_access_token');
     const savedRefreshToken = localStorage.getItem('storeino_refresh_token');
     const savedExpiry = localStorage.getItem('storeino_token_expiry');
+    const savedClientId = localStorage.getItem('storeino_client_id');
+    const savedClientSecret = localStorage.getItem('storeino_client_secret');
     
     if (savedAccessToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
       this.accessToken = savedAccessToken;
       this.refreshToken = savedRefreshToken;
       this.tokenExpiry = parseInt(savedExpiry);
+      this.clientId = savedClientId;
+      this.clientSecret = savedClientSecret;
     }
   }
 
@@ -144,26 +143,34 @@ class StoreinoApiService {
     return this.tokenExpiry !== null && Date.now() < this.tokenExpiry;
   }
 
-  private saveTokens(accessToken: string, refreshToken: string, expiresIn: number) {
+  private saveTokens(accessToken: string, refreshToken: string, expireTime: number, clientId: string, clientSecret: string) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
-    this.tokenExpiry = Date.now() + (expiresIn * 1000);
+    this.tokenExpiry = Date.now() + (expireTime * 1000);
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
     
     localStorage.setItem('storeino_access_token', accessToken);
     localStorage.setItem('storeino_refresh_token', refreshToken);
     localStorage.setItem('storeino_token_expiry', this.tokenExpiry.toString());
+    localStorage.setItem('storeino_client_id', clientId);
+    localStorage.setItem('storeino_client_secret', clientSecret);
   }
 
   private clearTokens() {
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiry = null;
+    this.clientId = null;
+    this.clientSecret = null;
     localStorage.removeItem('storeino_access_token');
     localStorage.removeItem('storeino_refresh_token');
     localStorage.removeItem('storeino_token_expiry');
+    localStorage.removeItem('storeino_client_id');
+    localStorage.removeItem('storeino_client_secret');
   }
 
-  // Authenticate with clientId and clientSecret
+  // Step 1: Get Access Token using GET request
   async authenticateClient(credentials: StoreinoClientAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
     const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(credentials.clientId)}&clientSecret=${encodeURIComponent(credentials.clientSecret)}`;
     console.log('Attempting authentication to:', `${STOREINO_API_BASE}${endpoint}`);
@@ -175,20 +182,77 @@ class StoreinoApiService {
     console.log('Authentication response:', response);
     
     if (response.success && response.data) {
-      // Save the tokens
+      // Save the tokens with credentials for refresh
       this.saveTokens(
         response.data.accessToken, 
         response.data.refreshToken, 
-        response.data.expiresIn
+        response.data.expireTime,
+        credentials.clientId,
+        credentials.clientSecret
       );
     }
 
     return response;
   }
 
-  // Get merchant stores
+  // Step 3: Refresh Access Token using POST request
+  async refreshAccessToken(): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
+    if (!this.refreshToken || !this.clientId || !this.clientSecret) {
+      return {
+        success: false,
+        data: null as StoreinoAuthResponse,
+        error: 'No refresh token or credentials available'
+      };
+    }
+
+    const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(this.clientId)}&clientSecret=${encodeURIComponent(this.clientSecret)}&refresh=true`;
+    
+    const response = await this.makeRequest<StoreinoAuthResponse>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify({
+        refreshToken: this.refreshToken
+      })
+    });
+
+    if (response.success && response.data) {
+      // Update tokens
+      this.saveTokens(
+        response.data.accessToken,
+        response.data.refreshToken,
+        response.data.expireTime,
+        this.clientId,
+        this.clientSecret
+      );
+    }
+
+    return response;
+  }
+
+  // Auto-refresh token if needed before making requests
+  async refreshTokenIfNeeded(): Promise<boolean> {
+    // If token is expired or will expire in next 5 minutes
+    const fiveMinutes = 5 * 60 * 1000;
+    if (!this.isTokenValid() || (this.tokenExpiry && (this.tokenExpiry - Date.now()) < fiveMinutes)) {
+      console.log('Token expired or expiring soon, attempting refresh...');
+      
+      const refreshResponse = await this.refreshAccessToken();
+      if (!refreshResponse.success) {
+        console.error('Token refresh failed:', refreshResponse.error);
+        this.clearTokens();
+        return false;
+      }
+      
+      console.log('Token refreshed successfully');
+    }
+    
+    return true;
+  }
+
+  // Get merchant stores (Step 2: Use token in authenticated requests)
   async getMerchantStores(): Promise<StoreinoApiResponse<StoreinoStoreData[]>> {
-    if (!this.isTokenValid()) {
+    // Ensure token is valid before making request
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
       return {
         success: false,
         data: null as StoreinoStoreData[],
@@ -203,7 +267,8 @@ class StoreinoApiService {
 
   // Get specific store details
   async getStoreDetails(storeId: string): Promise<StoreinoApiResponse<StoreinoStoreData>> {
-    if (!this.isTokenValid()) {
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
       return {
         success: false,
         data: null as StoreinoStoreData,
@@ -218,7 +283,8 @@ class StoreinoApiService {
 
   // Get store analytics/metrics
   async getStoreMetrics(storeId: string, period: string = 'month'): Promise<StoreinoApiResponse<StoreinoStoreMetrics>> {
-    if (!this.isTokenValid()) {
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
       return {
         success: false,
         data: null as StoreinoStoreMetrics,
@@ -231,9 +297,26 @@ class StoreinoApiService {
     });
   }
 
+  // Get store products (example of authenticated request)
+  async getStoreProducts(storeId: string, limit: number = 100): Promise<StoreinoApiResponse<any[]>> {
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
+      return {
+        success: false,
+        data: null as any[],
+        error: 'Authentication required'
+      };
+    }
+
+    return this.makeRequest<any[]>(`/v1/products?storeId=${storeId}&limit=${limit}`, {
+      method: 'GET'
+    });
+  }
+
   // Get store orders
   async getStoreOrders(storeId: string, limit: number = 100): Promise<StoreinoApiResponse<any[]>> {
-    if (!this.isTokenValid()) {
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
       return {
         success: false,
         data: null as any[],
@@ -248,7 +331,8 @@ class StoreinoApiService {
 
   // Get store customers
   async getStoreCustomers(storeId: string, limit: number = 100): Promise<StoreinoApiResponse<any[]>> {
-    if (!this.isTokenValid()) {
+    const tokenValid = await this.refreshTokenIfNeeded();
+    if (!tokenValid) {
       return {
         success: false,
         data: null as any[],
@@ -274,23 +358,6 @@ class StoreinoApiService {
   // Get current access token
   getAccessToken(): string | null {
     return this.isTokenValid() ? this.accessToken : null;
-  }
-
-  // Refresh token if needed
-  async refreshTokenIfNeeded(): Promise<boolean> {
-    if (!this.isTokenValid()) {
-      this.clearTokens();
-      return false;
-    }
-    
-    // If token expires in less than 5 minutes, we might want to refresh
-    const fiveMinutes = 5 * 60 * 1000;
-    if (this.tokenExpiry && (this.tokenExpiry - Date.now()) < fiveMinutes) {
-      // TODO: Implement token refresh logic if Storeino API supports it
-      // For now, we'll just return true if token is still valid
-    }
-    
-    return true;
   }
 }
 

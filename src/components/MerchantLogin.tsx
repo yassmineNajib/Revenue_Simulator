@@ -15,8 +15,9 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   loading,
   error
 }) => {
-  const [clientId, setClientId] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
+  // Auto-populate from environment variables if available
+  const [clientId, setClientId] = useState(import.meta.env.VITE_STOREINO_CLIENT_ID || '');
+  const [clientSecret, setClientSecret] = useState(import.meta.env.VITE_STOREINO_CLIENT_SECRET || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +55,18 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
               <div className="text-red-700 text-sm">
-                <p className="font-medium mb-2">Login Error:</p>
+                <p className="font-medium mb-2">
+                  {language === 'en' ? 'Authentication Error:' : 'Erreur d\'Authentification:'}
+                </p>
                 <p className="text-xs break-words">{error}</p>
+                {error.includes('Cannot GET') && (
+                  <p className="text-xs mt-2 text-red-600">
+                    {language === 'en' 
+                      ? '💡 Tip: Check if your credentials are correct and the API is accessible'
+                      : '💡 Conseil: Vérifiez si vos identifiants sont corrects et l\'API est accessible'
+                    }
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -124,6 +135,14 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
                 : 'Utilisez votre ID Client et Secret Client de l\'API Storeino'
               }
             </p>
+            {(import.meta.env.VITE_STOREINO_CLIENT_ID || import.meta.env.VITE_STOREINO_CLIENT_SECRET) && (
+              <p className="text-green-600 text-xs mt-1">
+                {language === 'en' 
+                  ? '✅ Credentials auto-loaded from environment' 
+                  : '✅ Identifiants chargés automatiquement'
+                }
+              </p>
+            )}
           </div>
         </div>
       </div>
