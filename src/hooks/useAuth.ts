@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MerchantData, AuthState } from '../types';
-import { storeinoApi, StoreinoStoreData, StoreinoStoreMetrics } from '../services/storeinoApi';
+import { storeinoApi, StoreinoStoreData, StoreinoStoreMetrics, StoreinoClientAuth } from '../services/storeinoApi';
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -73,25 +73,26 @@ export const useAuth = () => {
     checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (clientId: string, clientSecret: string) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       // Authenticate with Storeino API
-      const authResponse = await storeinoApi.authenticateMerchant({ email, password });
+      const authResponse = await storeinoApi.authenticateClient({ clientId, clientSecret });
 
       if (authResponse.success && authResponse.data) {
-        const { user } = authResponse.data;
+        // Get stores after authentication
+        const storesResponse = await storeinoApi.getMerchantStores();
         
-        if (user.stores && user.stores.length > 0) {
+        if (storesResponse.success && storesResponse.data && storesResponse.data.length > 0) {
           // Get metrics for the first store
-          const firstStore = user.stores[0];
+          const firstStore = storesResponse.data[0];
           const metricsResponse = await storeinoApi.getStoreMetrics(firstStore.id);
           
           const merchant: MerchantData = {
             id: firstStore.id,
-            name: user.name,
-            email: user.email,
+            name: firstStore.name,
+            email: '', // Not available from client credentials flow
             storeUrl: firstStore.domain,
             plan: firstStore.plan,
             metrics: {

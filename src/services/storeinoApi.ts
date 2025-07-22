@@ -1,7 +1,7 @@
 // Storeino API Integration Service
 // Real API implementation for https://api-stores.storeino.com
 
-const STOREINO_API_BASE = 'https://api-stores.storeino.com/api';
+const STOREINO_API_BASE = 'https://api-stores.storeino.com';
 
 export interface StoreinoApiResponse<T> {
   success: boolean;
@@ -10,9 +10,9 @@ export interface StoreinoApiResponse<T> {
   message?: string;
 }
 
-export interface StoreinoMerchantAuth {
-  email: string;
-  password: string;
+export interface StoreinoClientAuth {
+  clientId: string;
+  clientSecret: string;
 }
 
 export interface StoreinoStoreData {
@@ -40,10 +40,11 @@ export interface StoreinoStoreMetrics {
 }
 
 export interface StoreinoAuthResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  user: {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+  user?: {
     id: string;
     email: string;
     name: string;
@@ -53,15 +54,18 @@ export interface StoreinoAuthResponse {
 
 class StoreinoApiService {
   private accessToken: string | null = null;
+  private refreshToken: string | null = null;
   private tokenExpiry: number | null = null;
 
   constructor() {
-    // Try to restore token from localStorage
-    const savedToken = localStorage.getItem('storeino_access_token');
+    // Try to restore tokens from localStorage
+    const savedAccessToken = localStorage.getItem('storeino_access_token');
+    const savedRefreshToken = localStorage.getItem('storeino_refresh_token');
     const savedExpiry = localStorage.getItem('storeino_token_expiry');
     
-    if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
-      this.accessToken = savedToken;
+    if (savedAccessToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
+      this.accessToken = savedAccessToken;
+      this.refreshToken = savedRefreshToken;
       this.tokenExpiry = parseInt(savedExpiry);
     }
   }
@@ -74,14 +78,16 @@ class StoreinoApiService {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Access-Control-Allow-Origin': '*',
         ...options.headers as Record<string, string>,
       };
 
-      // Add authorization header if we have a token
+      // Add x-auth-token header if we have an access token
       if (this.accessToken && this.isTokenValid()) {
-        headers['Authorization'] = `Bearer ${this.accessToken}`;
+        headers['x-auth-token'] = this.accessToken;
       }
+
+      console.log('Making API request to:', `${STOREINO_API_BASE}${endpoint}`);
+      console.log('Headers:', headers);
 
       const response = await fetch(`${STOREINO_API_BASE}${endpoint}`, {
         ...options,
@@ -89,12 +95,16 @@ class StoreinoApiService {
         mode: 'cors',
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       // Check if response is actually JSON
       const contentType = response.headers.get('content-type');
       let data;
       
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
+        console.log('Response data:', data);
       } else {
         // If not JSON, get text to see what we're actually receiving
         const textResponse = await response.text();
@@ -134,39 +144,43 @@ class StoreinoApiService {
     return this.tokenExpiry !== null && Date.now() < this.tokenExpiry;
   }
 
-  private saveToken(token: string, expiresIn: number) {
-    this.accessToken = token;
+  private saveTokens(accessToken: string, refreshToken: string, expiresIn: number) {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
     this.tokenExpiry = Date.now() + (expiresIn * 1000);
     
-    localStorage.setItem('storeino_access_token', token);
+    localStorage.setItem('storeino_access_token', accessToken);
+    localStorage.setItem('storeino_refresh_token', refreshToken);
     localStorage.setItem('storeino_token_expiry', this.tokenExpiry.toString());
   }
 
-  private clearToken() {
+  private clearTokens() {
     this.accessToken = null;
+    this.refreshToken = null;
     this.tokenExpiry = null;
     localStorage.removeItem('storeino_access_token');
+    localStorage.removeItem('storeino_refresh_token');
     localStorage.removeItem('storeino_token_expiry');
   }
 
-  // Authenticate merchant with Storeino
-  async authenticateMerchant(credentials: StoreinoMerchantAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
-    console.log('Attempting login to:', `${STOREINO_API_BASE}/auth/login`);
+  // Authenticate with clientId and clientSecret
+  async authenticateClient(credentials: StoreinoClientAuth): Promise<StoreinoApiResponse<StoreinoAuthResponse>> {
+    const endpoint = `/v1/stores/authentication?clientId=${credentials.clientId}&clientSecret=${credentials.clientSecret}`;
+    console.log('Attempting authentication to:', `${STOREINO_API_BASE}${endpoint}`);
     
-    const response = await this.makeRequest<StoreinoAuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: credentials.email,
-        password: credentials.password,
-        module: 'merchant'
-      })
+    const response = await this.makeRequest<StoreinoAuthResponse>(endpoint, {
+      method: 'GET'
     });
 
-    console.log('Login response:', response);
+    console.log('Authentication response:', response);
     
     if (response.success && response.data) {
-      // Save the access token
-      this.saveToken(response.data.access_token, response.data.expires_in);
+      // Save the tokens
+      this.saveTokens(
+        response.data.accessToken, 
+        response.data.refreshToken, 
+        response.data.expiresIn
+      );
     }
 
     return response;
@@ -182,7 +196,7 @@ class StoreinoApiService {
       };
     }
 
-    return this.makeRequest<StoreinoStoreData[]>('/stores', {
+    return this.makeRequest<StoreinoStoreData[]>('/v1/stores', {
       method: 'GET'
     });
   }
@@ -197,7 +211,7 @@ class StoreinoApiService {
       };
     }
 
-    return this.makeRequest<StoreinoStoreData>(`/stores/${storeId}`, {
+    return this.makeRequest<StoreinoStoreData>(`/v1/stores/${storeId}`, {
       method: 'GET'
     });
   }
@@ -212,7 +226,7 @@ class StoreinoApiService {
       };
     }
 
-    return this.makeRequest<StoreinoStoreMetrics>(`/stores/${storeId}/analytics?period=${period}`, {
+    return this.makeRequest<StoreinoStoreMetrics>(`/v1/stores/${storeId}/analytics?period=${period}`, {
       method: 'GET'
     });
   }
@@ -227,7 +241,7 @@ class StoreinoApiService {
       };
     }
 
-    return this.makeRequest<any[]>(`/stores/${storeId}/orders?limit=${limit}`, {
+    return this.makeRequest<any[]>(`/v1/stores/${storeId}/orders?limit=${limit}`, {
       method: 'GET'
     });
   }
@@ -242,24 +256,14 @@ class StoreinoApiService {
       };
     }
 
-    return this.makeRequest<any[]>(`/stores/${storeId}/customers?limit=${limit}`, {
+    return this.makeRequest<any[]>(`/v1/stores/${storeId}/customers?limit=${limit}`, {
       method: 'GET'
     });
   }
 
-  // Logout and clear token
+  // Logout and clear tokens
   async logout(): Promise<void> {
-    if (this.isTokenValid()) {
-      try {
-        await this.makeRequest('/auth/logout', {
-          method: 'POST'
-        });
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
-    }
-    
-    this.clearToken();
+    this.clearTokens();
   }
 
   // Check if user is authenticated
@@ -275,14 +279,14 @@ class StoreinoApiService {
   // Refresh token if needed
   async refreshTokenIfNeeded(): Promise<boolean> {
     if (!this.isTokenValid()) {
-      this.clearToken();
+      this.clearTokens();
       return false;
     }
     
     // If token expires in less than 5 minutes, we might want to refresh
     const fiveMinutes = 5 * 60 * 1000;
     if (this.tokenExpiry && (this.tokenExpiry - Date.now()) < fiveMinutes) {
-      // Implement token refresh logic here if Storeino API supports it
+      // TODO: Implement token refresh logic if Storeino API supports it
       // For now, we'll just return true if token is still valid
     }
     

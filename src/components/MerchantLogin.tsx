@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { LogIn, Store, Mail, Lock, Loader2 } from 'lucide-react';
+import { LogIn, Store, Key, Shield, Loader2 } from 'lucide-react';
 import { Language } from '../types';
 
 interface MerchantLoginProps {
   language: Language;
-  onLogin: (email: string, password: string) => Promise<void>;
+  onLogin: (clientId: string, clientSecret: string) => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -15,13 +15,13 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   loading,
   error
 }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      await onLogin(email, password);
+    if (clientId && clientSecret) {
+      await onLogin(clientId, clientSecret);
     }
   };
 
@@ -41,12 +41,12 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
               </h1>
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2">
-              {language === 'en' ? 'Merchant Login' : 'Connexion Marchand'}
+              {language === 'en' ? 'API Authentication' : 'Authentification API'}
             </h2>
             <p className="text-slate-600">
               {language === 'en' 
-                ? 'Access your store analytics and revenue insights' 
-                : 'Accédez à vos analyses de boutique et insights revenus'
+                ? 'Enter your API credentials to access store data' 
+                : 'Entrez vos identifiants API pour accéder aux données'
               }
             </p>
           </div>
@@ -63,15 +63,15 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">
-                {language === 'en' ? 'Email Address' : 'Adresse Email'}
+                {language === 'en' ? 'Client ID' : 'ID Client'}
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={language === 'en' ? 'your@email.com' : 'votre@email.com'}
+                  type="text"
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  placeholder={language === 'en' ? 'your-client-id' : 'votre-id-client'}
                   className="w-full pl-12 pr-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-slate-50 hover:bg-white"
                   required
                 />
@@ -80,15 +80,15 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
 
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">
-                {language === 'en' ? 'Password' : 'Mot de Passe'}
+                {language === 'en' ? 'Client Secret' : 'Secret Client'}
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  value={clientSecret}
+                  onChange={(e) => setClientSecret(e.target.value)}
+                  placeholder={language === 'en' ? 'your-client-secret' : 'votre-secret-client'}
                   className="w-full pl-12 pr-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-slate-50 hover:bg-white"
                   required
                 />
@@ -97,18 +97,18 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
 
             <button
               type="submit"
-              disabled={loading || !email || !password}
+              disabled={loading || !clientId || !clientSecret}
               className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>{language === 'en' ? 'Signing In...' : 'Connexion...'}</span>
+                  <span>{language === 'en' ? 'Authenticating...' : 'Authentification...'}</span>
                 </>
               ) : (
                 <>
                   <LogIn className="w-6 h-6" />
-                  <span>{language === 'en' ? 'Sign In' : 'Se Connecter'}</span>
+                  <span>{language === 'en' ? 'Authenticate' : 'S\'Authentifier'}</span>
                 </>
               )}
             </button>
@@ -116,12 +116,12 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
 
           <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <p className="text-blue-700 text-sm font-medium mb-2">
-              {language === 'en' ? '🔐 Storeino Login:' : '🔐 Connexion Storeino:'}
+              {language === 'en' ? '🔐 API Credentials:' : '🔐 Identifiants API:'}
             </p>
             <p className="text-blue-600 text-xs">
               {language === 'en' 
-                ? 'Use your real Storeino merchant credentials' 
-                : 'Utilisez vos identifiants marchands Storeino réels'
+                ? 'Use your Storeino API Client ID and Client Secret' 
+                : 'Utilisez votre ID Client et Secret Client de l\'API Storeino'
               }
             </p>
           </div>
