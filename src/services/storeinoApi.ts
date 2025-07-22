@@ -92,25 +92,10 @@ class StoreinoApiService {
       const response = await fetch(`${STOREINO_API_BASE}${endpoint}`, {
         ...options,
         headers,
-        mode: 'no-cors',
       });
 
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-      // Handle no-cors mode - we can't read the response
-      if (options.mode === 'no-cors') {
-        // For no-cors, we assume success if no network error occurred
-        // This is a limitation when dealing with CORS-restricted APIs
-        return {
-          success: true,
-          data: {
-            accessToken: 'mock-token-' + Date.now(),
-            refreshToken: 'mock-refresh-' + Date.now(),
-            expireTime: 86400
-          } as T
-        };
-      }
 
       // Check if response is actually JSON
       const contentType = response.headers.get('content-type');
@@ -210,7 +195,7 @@ class StoreinoApiService {
     console.log('Attempting authentication to:', `${STOREINO_API_BASE}${endpoint}`);
     
     const response = await this.makeRequest<StoreinoAuthResponse>(endpoint, {
-      method: 'GET'
+      method: 'POST'
     });
 
     console.log('Authentication response:', response);
