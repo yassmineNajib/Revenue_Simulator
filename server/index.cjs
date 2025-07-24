@@ -9,7 +9,7 @@ const authRoutes = require(path.join(__dirname, 'routes', 'auth.cjs'));
 const storeinoRoutes = require(path.join(__dirname, 'routes', 'storeino.cjs'));
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Log the port clearly
 console.log(`🔧 Attempting to start server on port ${PORT}`);
@@ -22,7 +22,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://localhost:5173',
-    process.env.FRONTEND_URL
+    process.env.FRONTEND_URL,
+    /\.webcontainer-api\.io$/
   ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -89,9 +90,18 @@ app.use('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend server successfully started on http://localhost:${PORT}`);
   console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
   console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📡 Backend API available at: http://localhost:${PORT}/api`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`❌ Port ${PORT} is already in use. Trying port ${PORT + 1}...`);
+    app.listen(PORT + 1, '0.0.0.0', () => {
+      console.log(`🚀 Backend server started on http://localhost:${PORT + 1}`);
+    });
+  } else {
+    console.error('❌ Server startup error:', err);
+  }
 });
