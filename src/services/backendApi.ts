@@ -35,6 +35,9 @@ class BackendApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<BackendApiResponse<T>> {
+    console.log('🌐 Making backend request to:', `${BACKEND_BASE_URL}${endpoint}`);
+    console.log('📋 Request options:', options);
+    
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -51,9 +54,14 @@ class BackendApiService {
         headers,
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+      console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+      
       const data = await response.json();
+      console.log('📊 Response data:', data);
 
       if (!response.ok) {
+        console.log('❌ Request failed:', data);
         return {
           success: false,
           error: data.error || `HTTP ${response.status}`,
@@ -67,6 +75,16 @@ class BackendApiService {
       };
     } catch (error) {
       console.error('Backend API Error:', error);
+      
+      // More specific error handling
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        return {
+          success: false,
+          data: null as T,
+          error: `Cannot connect to backend server at ${BACKEND_BASE_URL}. Make sure the backend server is running on port 3001.`
+        };
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Network error'

@@ -85,21 +85,32 @@ export const useAuth = () => {
   const login = async (clientId: string, clientSecret: string) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
+    console.log('🔐 Starting login process...');
+    console.log('Backend API authenticated:', backendApi.isAuthenticated());
+
     try {
       // Login with backend using Storeino credentials
+      console.log('📡 Authenticating with backend...');
       const authResponse = await backendApi.loginWithStoreino(clientId, clientSecret);
+      console.log('🔑 Backend auth response:', authResponse);
 
       if (authResponse.success && authResponse.data) {
         // Authenticate with Storeino through backend
+        console.log('🌐 Authenticating with Storeino through backend...');
         const storeinoAuthResponse = await backendApi.authenticateWithStoreino(clientId, clientSecret);
+        console.log('🏪 Storeino auth response:', storeinoAuthResponse);
         
         if (storeinoAuthResponse.success && storeinoAuthResponse.data) {
           // Get stores using the access token
+          console.log('🏬 Fetching stores...');
           const storesResponse = await backendApi.getStores(storeinoAuthResponse.data.accessToken);
+          console.log('🏪 Stores response:', storesResponse);
           
           if (storesResponse.success && storesResponse.data && storesResponse.data.length > 0) {
             const firstStore = storesResponse.data[0];
+            console.log('📊 Fetching store metrics...');
             const metricsResponse = await backendApi.getStoreMetrics(firstStore.id, storeinoAuthResponse.data.accessToken);
+            console.log('📈 Metrics response:', metricsResponse);
             
             const merchant: MerchantData = {
               id: firstStore.id,

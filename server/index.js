@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -12,9 +13,17 @@ const PORT = process.env.PORT || 3001;
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration - be more specific for development
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: [
+    'http://localhost:5173',
+    'https://localhost:5173',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 }));
 
 // Rate limiting

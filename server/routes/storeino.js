@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const fetch = require('node-fetch');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
@@ -57,7 +58,11 @@ const getStoreinoCredentials = (userId, type) => {
 const makeStoreinoRequest = async (endpoint, options = {}) => {
   try {
     const url = `${STOREINO_API_BASE}${endpoint}`;
-    console.log('Making Storeino API request to:', url);
+    console.log('🔗 Making Storeino API request to:', url);
+    console.log('📋 Request options:', {
+      method: options.method || 'GET',
+      headers: options.headers || {}
+    });
     
     const response = await fetch(url, {
       ...options,
@@ -68,6 +73,7 @@ const makeStoreinoRequest = async (endpoint, options = {}) => {
       }
     });
 
+    console.log('📊 Response status:', response.status, response.statusText);
     const contentType = response.headers.get('content-type');
     let data;
     
@@ -75,6 +81,7 @@ const makeStoreinoRequest = async (endpoint, options = {}) => {
       data = await response.json();
     } else {
       const textResponse = await response.text();
+      console.log('📄 Non-JSON response:', textResponse.substring(0, 500));
       console.error('Non-JSON response from Storeino API:', textResponse);
       throw new Error(`Storeino API returned non-JSON response: ${response.status}`);
     }
@@ -99,29 +106,41 @@ const makeStoreinoRequest = async (endpoint, options = {}) => {
 // Authenticate with Storeino API
 router.post('/authenticate', authenticateToken, async (req, res) => {
   try {
-    const { clientId, clientSecret } = req.body;
+    console.log('🔐 Storeino authentication request received');
+    console.log('Request body:', req.body);
+    console.log('User from token:', req.user);
+    
+    let { clientId, clientSecret } = req.body;
     
     // Use provided credentials or get from user profile
-    let credentials;
     if (clientId && clientSecret) {
-      credentials = { clientId, clientSecret };
+      console.log('✅ Using provided credentials');
     } else {
-      credentials = getStoreinoCredentials(req.user.userId, req.user.type);
+      console.log('🔍 Looking up stored credentials for user:', req.user.userId);
+      const storedCredentials = getStoreinoCredentials(req.user.userId, req.user.type);
+      if (storedCredentials) {
+        clientId = storedCredentials.clientId;
+        clientSecret = storedCredentials.clientSecret;
+        console.log('✅ Found stored credentials');
+      }
     }
 
-    if (!credentials) {
+    if (!clientId || !clientSecret) {
+      console.log('❌ No credentials available');
       return res.status(400).json({
         success: false,
-        error: 'Storeino credentials not found'
+        error: 'Storeino credentials not found. Please provide clientId and clientSecret.'
       });
     }
 
-    const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(credentials.clientId)}&clientSecret=${encodeURIComponent(credentials.clientSecret)}`;
+    const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(clientId)}&clientSecret=${encodeURIComponent(clientSecret)}`;
+    console.log('🌐 Making request to Storeino API:', `${STOREINO_API_BASE}${endpoint}`);
     
     const result = await makeStoreinoRequest(endpoint, {
-      method: 'POST'
+      method: 'GET'  // According to Storeino docs, authentication is GET
     });
 
+    console.log('📡 Storeino API response:', result);
     res.json(result);
   } catch (error) {
     console.error('Storeino authentication error:', error);
