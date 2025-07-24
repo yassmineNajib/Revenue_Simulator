@@ -9,7 +9,7 @@ const authRoutes = require(path.join(__dirname, 'routes', 'auth.cjs'));
 const storeinoRoutes = require(path.join(__dirname, 'routes', 'storeino.cjs'));
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 
 // Log the port clearly
 console.log(`🔧 Attempting to start server on port ${PORT}`);
