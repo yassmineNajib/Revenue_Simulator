@@ -6,7 +6,7 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
-const storeinoRoutes = require('./routes/storeino');
+const storeinoRoutes = require('./routes/storeino.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
