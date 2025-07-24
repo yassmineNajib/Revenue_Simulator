@@ -11,6 +11,9 @@ const storeinoRoutes = require('./routes/storeino');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Log the port clearly
+console.log(`🔧 Attempting to start server on port ${PORT}`);
+
 // Security middleware
 app.use(helmet());
 
@@ -65,7 +68,8 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on port ${PORT}`);
+  console.log(`🚀 Backend server successfully started on http://localhost:${PORT}`);
   console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
   console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📡 Backend API available at: http://localhost:${PORT}/api`);
 });
