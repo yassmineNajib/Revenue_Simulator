@@ -49,6 +49,28 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Root endpoint for testing
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Storeino Revenue Simulator Backend API',
+    endpoints: {
+      auth: '/api/auth',
+      storeino: '/api/storeino',
+      health: '/health'
+    }
+  });
+});
+
+// API root endpoint
+app.get('/api', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is working',
+    availableRoutes: ['/api/auth', '/api/storeino']
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
