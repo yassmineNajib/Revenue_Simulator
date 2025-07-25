@@ -11,20 +11,17 @@ const storeinoRoutes = require('./routes/storeino');
 const app = express();
 const PORT = 3001;
 
-// Log the port clearly
-console.log(`🔧 Attempting to start server on port ${PORT}`);
+console.log(`🔧 Starting server on port ${PORT}`);
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false
+}));
 
-// CORS configuration - be more specific for development
+// CORS configuration
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://localhost:5173',
-    process.env.FRONTEND_URL,
-    /\.webcontainer-api\.io$/
-  ].filter(Boolean),
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
@@ -32,8 +29,8 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 1000
 });
 app.use(limiter);
 
@@ -47,14 +44,19 @@ app.use('/api/storeino', storeinoRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT
+  });
 });
 
-// Root endpoint for testing
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
     success: true, 
     message: 'Storeino Revenue Simulator Backend API',
+    port: PORT,
     endpoints: {
       auth: '/api/auth',
       storeino: '/api/storeino',
@@ -68,6 +70,7 @@ app.get('/api', (req, res) => {
   res.json({ 
     success: true, 
     message: 'API is working',
+    port: PORT,
     availableRoutes: ['/api/auth', '/api/storeino']
   });
 });
@@ -86,22 +89,28 @@ app.use((err, req, res, next) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Endpoint not found'
+    error: 'Endpoint not found',
+    requestedUrl: req.originalUrl
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend server successfully started on http://localhost:${PORT}`);
-  console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  console.log(`📡 Test the API: curl http://localhost:${PORT}`);
   console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📡 Backend API available at: http://localhost:${PORT}/api`);
-}).on('error', (err) => {
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
   if (err.code === 'EADDRINUSE') {
-    console.log(`❌ Port ${PORT} is already in use. Trying port ${PORT + 1}...`);
-    app.listen(PORT + 1, '0.0.0.0', () => {
-      console.log(`🚀 Backend server started on http://localhost:${PORT + 1}`);
-    });
-  } else {
-    console.error('❌ Server startup error:', err);
+    console.log(`❌ Port ${PORT} is already in use`);
+    process.exit(1);
   }
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+  });
 });
