@@ -1,7 +1,7 @@
 // Backend API Service - Secure communication with our Node.js backend
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_BASE_URL = 'http://localhost:3001';
 
-console.log('🔗 Backend API configured to connect to:', BACKEND_BASE_URL);
+console.log('🔗 Backend API hardcoded to connect to:', BACKEND_BASE_URL);
 
 export interface BackendApiResponse<T> {
   success: boolean;
