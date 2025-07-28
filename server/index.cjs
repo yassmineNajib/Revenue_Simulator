@@ -5,8 +5,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth');
-const storeinoRoutes = require('./routes/storeino');
+const authRoutes = require('./routes/auth.cjs');
+const storeinoRoutes = require('./routes/storeino.cjs');
 
 const app = express();
 const PORT = 3001;
