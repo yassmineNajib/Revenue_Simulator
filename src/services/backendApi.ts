@@ -1,5 +1,5 @@
   // Backend API Service - Secure communication with our Node.js backend
-  const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
+  const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002';
   
   console.log('🔗 Backend API connecting to:', BACKEND_BASE_URL);
   
@@ -82,7 +82,7 @@
         if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
           return {
             success: false,
-            error: `Cannot connect to backend server at ${BACKEND_BASE_URL}. Make sure the backend server is running on port 3001.`
+            error: `Cannot connect to backend server at ${BACKEND_BASE_URL}. Make sure the backend server is running on port 3002.`
           };
         }
         
