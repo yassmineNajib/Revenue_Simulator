@@ -39,6 +39,32 @@ export const useAuth = () => {
             console.log('📊 Fetching store metrics...');
             const metricsResponse = await backendApi.getStoreMetrics(firstStore.id, storeinoAuthResponse.data.accessToken);
             console.log('📈 Metrics response:', metricsResponse);
+            
+            const merchant: MerchantData = {
+              id: firstStore.id,
+              name: firstStore.name,
+              email: authResponse.data.user.email,
+              storeUrl: firstStore.domain,
+              plan: firstStore.plan,
+              metrics: {
+                monthlyVisitors: metricsResponse.data?.monthly_visitors || 0,
+                conversionRate: metricsResponse.data?.conversion_rate || 0,
+                averageCartValue: metricsResponse.data?.average_order_value || 0,
+                totalOrders: metricsResponse.data?.total_orders || 0,
+                totalRevenue: metricsResponse.data?.total_revenue || 0,
+                customerCount: metricsResponse.data?.total_customers || 0,
+                averageOrderFrequency: 2.5,
+                customerLifespan: 18
+              },
+              lastUpdated: new Date().toISOString()
+            };
+            
+            setAuthState({
+              isAuthenticated: true,
+              merchant,
+              loading: false,
+              error: null
+            });
           } else if (storesResponse.success && storesResponse.data) {
             console.log('⚠️ Stores response successful but empty:', storesResponse.data);
             console.log('📊 Response structure:', JSON.stringify(storesResponse.data, null, 2));
@@ -70,32 +96,6 @@ export const useAuth = () => {
               error: 'No stores found in your account, using demo data. Please check your Storeino account or contact support.'
             });
             return;
-            
-            const merchant: MerchantData = {
-              id: firstStore.id,
-              name: firstStore.name,
-              email: authResponse.data.user.email,
-              storeUrl: firstStore.domain,
-              plan: firstStore.plan,
-              metrics: {
-                monthlyVisitors: metricsResponse.data?.monthly_visitors || 0,
-                conversionRate: metricsResponse.data?.conversion_rate || 0,
-                averageCartValue: metricsResponse.data?.average_order_value || 0,
-                totalOrders: metricsResponse.data?.total_orders || 0,
-                totalRevenue: metricsResponse.data?.total_revenue || 0,
-                customerCount: metricsResponse.data?.total_customers || 0,
-                averageOrderFrequency: 2.5,
-                customerLifespan: 18
-              },
-              lastUpdated: new Date().toISOString()
-            };
-            
-            setAuthState({
-              isAuthenticated: true,
-              merchant,
-              loading: false,
-              error: null
-            });
           } else {
             console.error('❌ Stores API failed:', storesResponse);
             setAuthState(prev => ({
