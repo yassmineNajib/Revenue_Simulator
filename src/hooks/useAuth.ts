@@ -39,6 +39,37 @@ export const useAuth = () => {
             console.log('📊 Fetching store metrics...');
             const metricsResponse = await backendApi.getStoreMetrics(firstStore.id, storeinoAuthResponse.data.accessToken);
             console.log('📈 Metrics response:', metricsResponse);
+          } else if (storesResponse.success && storesResponse.data) {
+            console.log('⚠️ Stores response successful but empty:', storesResponse.data);
+            console.log('📊 Response structure:', JSON.stringify(storesResponse.data, null, 2));
+            
+            // Create a demo merchant for testing when no stores are found
+            const merchant: MerchantData = {
+              id: 'demo-store',
+              name: 'Demo Store',
+              email: authResponse.data.user.email,
+              storeUrl: 'demo.storeino.com',
+              plan: 'startup',
+              metrics: {
+                monthlyVisitors: 5000,
+                conversionRate: 2.5,
+                averageCartValue: 350,
+                totalOrders: 125,
+                totalRevenue: 43750,
+                customerCount: 100,
+                averageOrderFrequency: 2.5,
+                customerLifespan: 18
+              },
+              lastUpdated: new Date().toISOString()
+            };
+            
+            setAuthState({
+              isAuthenticated: true,
+              merchant,
+              loading: false,
+              error: 'No stores found in your account, using demo data. Please check your Storeino account or contact support.'
+            });
+            return;
             
             const merchant: MerchantData = {
               id: firstStore.id,
@@ -66,10 +97,11 @@ export const useAuth = () => {
               error: null
             });
           } else {
+            console.error('❌ Stores API failed:', storesResponse);
             setAuthState(prev => ({
               ...prev,
               loading: false,
-              error: 'No stores found for this merchant'
+              error: `No stores found: ${storesResponse.error || 'Unknown error'}`
             }));
           }
         } else {

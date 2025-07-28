@@ -207,12 +207,22 @@ router.get('/stores', authenticateToken, async (req, res) => {
       });
     }
 
+    console.log('🏪 Fetching stores with access token:', accessToken.substring(0, 20) + '...');
     const result = await makeStoreinoRequest('/v1/stores', {
       method: 'GET',
       headers: {
         'x-auth-token': accessToken
       }
     });
+
+    console.log('🏬 Stores API result:', JSON.stringify(result, null, 2));
+    
+    // Log the actual data structure
+    if (result.success && result.data) {
+      console.log('📊 Stores data type:', typeof result.data);
+      console.log('📊 Stores data length:', Array.isArray(result.data) ? result.data.length : 'Not an array');
+      console.log('📊 Stores data content:', result.data);
+    }
 
     res.json(result);
   } catch (error) {

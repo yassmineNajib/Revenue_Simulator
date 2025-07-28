@@ -63,6 +63,18 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
                   {language === 'en' ? 'Authentication Error:' : 'Erreur d\'Authentification:'}
                 </p>
                 <p className="text-xs break-words">{error}</p>
+                {error.includes('No stores found') && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-yellow-700 text-xs font-medium mb-1">
+                      {language === 'en' ? 'Possible Reasons:' : 'Raisons Possibles:'}
+                    </p>
+                    <ul className="text-yellow-600 text-xs space-y-1">
+                      <li>• {language === 'en' ? 'No stores created in your Storeino account yet' : 'Aucun magasin créé dans votre compte Storeino'}</li>
+                      <li>• {language === 'en' ? 'API credentials may not have store access permissions' : 'Les identifiants API n\'ont peut-être pas les permissions d\'accès aux magasins'}</li>
+                      <li>• {language === 'en' ? 'Store data may be in a different format than expected' : 'Les données du magasin peuvent être dans un format différent'}</li>
+                    </ul>
+                  </div>
+                )}
                 {(error.includes('Cannot GET') || error.includes('CORS')) && (
                   <p className="text-xs mt-2 text-red-600">
                     {language === 'en' 
