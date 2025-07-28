@@ -29,6 +29,7 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   const handleDemoMode = () => {
     onLogin('demo', 'demo');
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md border border-slate-200 relative overflow-hidden">

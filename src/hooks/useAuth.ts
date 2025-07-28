@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MerchantData, AuthState } from '../types';
-// import { backendApi } from '../services/backendApi';
+import { backendApi } from '../services/backendApi';
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -9,9 +9,6 @@ export const useAuth = () => {
     loading: false,
     error: null
   });
-
-  // For demo purposes, we'll skip the backend dependency
-  // and allow direct frontend-only usage
 
   const login = async (clientId: string, clientSecret: string) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));

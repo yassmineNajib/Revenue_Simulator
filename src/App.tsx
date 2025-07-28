@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
+import { MerchantLogin } from './components/MerchantLogin';
 import { Header } from './components/Header';
 import { InputForm } from './components/InputForm';
 import { ResultsDisplay } from './components/ResultsDisplay';
 import { RevenueChart } from './components/RevenueChart';
 import { ActionButtons } from './components/ActionButtons';
+import { useAuth } from './hooks/useAuth';
 import { SimulationInputs, SimulationResults, Language } from './types';
 import { calculateRevenue } from './utils/calculations';
 
 function App() {
   const [language, setLanguage] = useState<Language>('en');
+  const { isAuthenticated, merchant, loading, error, login, logout } = useAuth();
   const [inputs, setInputs] = useState<SimulationInputs>({
     monthlyVisitors: 0,
     conversionRate: 0,
@@ -17,6 +20,18 @@ function App() {
     otherCosts: 0
   });
   const [results, setResults] = useState<SimulationResults | null>(null);
+
+  // If not authenticated, show login screen
+  if (!isAuthenticated) {
+    return (
+      <MerchantLogin
+        language={language}
+        onLogin={login}
+        loading={loading}
+        error={error}
+      />
+    );
+  }
 
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
@@ -66,7 +81,8 @@ function App() {
       <Header 
         language={language} 
         onLanguageChange={setLanguage}
-        merchant={null}
+        merchant={merchant}
+        onLogout={logout}
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
