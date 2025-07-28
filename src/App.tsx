@@ -11,7 +11,8 @@ import { useAuth } from './hooks/useAuth';
 
 function App() {
   const [language, setLanguage] = useState<Language>('en');
-  const { isAuthenticated, merchant, login, logout, loading, error } = useAuth();
+  const [showDemo, setShowDemo] = useState(false);
+  // const { isAuthenticated, merchant, login, logout, loading, error } = useAuth();
   const [inputs, setInputs] = useState<SimulationInputs>({
     monthlyVisitors: 0,
     conversionRate: 0,
@@ -21,18 +22,6 @@ function App() {
   });
   const [results, setResults] = useState<SimulationResults | null>(null);
 
-  // Auto-populate inputs when merchant data is available
-  React.useEffect(() => {
-    if (merchant && merchant.metrics) {
-      setInputs({
-        monthlyVisitors: merchant.metrics.monthlyVisitors,
-        conversionRate: merchant.metrics.conversionRate,
-        averageCartValue: merchant.metrics.averageCartValue,
-        storeinoFees: 390, // Default to Pro plan, could be dynamic based on merchant.plan
-        otherCosts: 0
-      });
-    }
-  }, [merchant]);
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
   };
@@ -76,8 +65,24 @@ function App() {
     }
   };
 
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
+  // Demo login handler
+  const handleDemoLogin = () => {
+    setShowDemo(true);
+    // Auto-populate with demo data
+    setInputs({
+      monthlyVisitors: 5000,
+      conversionRate: 2.5,
+      averageCartValue: 350,
+      storeinoFees: 390,
+      otherCosts: 200
+    });
+  };
+
+  const handleDemoLogout = () => {
+    setShowDemo(false);
+  };
+
+  if (!showDemo) {
     return <MerchantLogin language={language} onLogin={login} loading={loading} error={error} />;
   }
   return (
@@ -85,25 +90,25 @@ function App() {
       <Header 
         language={language} 
         onLanguageChange={setLanguage}
-        merchant={merchant}
-        onLogout={logout}
+        merchant={null}
+        onLogout={handleDemoLogout}
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
-        {merchant && (
+        {showDemo && (
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">
-                  {language === 'en' ? 'Welcome back,' : 'Bon retour,'} {merchant.name}!
+                  {language === 'en' ? 'Welcome to Demo Mode!' : 'Bienvenue en Mode Démo!'}
                 </h3>
                 <p className="text-slate-600">
-                  {merchant.storeUrl} • {language === 'en' ? 'Last updated:' : 'Dernière mise à jour:'} {new Date(merchant.lastUpdated).toLocaleDateString()}
+                  {language === 'en' ? 'Demo Store • Sample data for testing' : 'Boutique Démo • Données d\'exemple pour test'}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-slate-600">{language === 'en' ? 'Current Plan' : 'Plan Actuel'}</p>
-                <p className="font-bold text-blue-600 capitalize">{merchant.plan}</p>
+                <p className="font-bold text-blue-600 capitalize">Pro</p>
               </div>
             </div>
           </div>

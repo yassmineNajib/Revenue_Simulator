@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MerchantData, AuthState } from '../types';
-import { backendApi } from '../services/backendApi';
+// import { backendApi } from '../services/backendApi';
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -10,77 +10,8 @@ export const useAuth = () => {
     error: null
   });
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      if (backendApi.isAuthenticated()) {
-        setAuthState(prev => ({ ...prev, loading: true }));
-        
-        try {
-          // Verify token with backend
-          const verifyResponse = await backendApi.verifyToken();
-          
-          if (verifyResponse.success && verifyResponse.data) {
-            // Authenticate with Storeino through backend
-            const storeinoAuthResponse = await backendApi.authenticateWithStoreino();
-            
-            if (storeinoAuthResponse.success && storeinoAuthResponse.data) {
-              // Get stores using the access token
-              const storesResponse = await backendApi.getStores(storeinoAuthResponse.data.accessToken);
-              
-              if (storesResponse.success && storesResponse.data && storesResponse.data.length > 0) {
-                const firstStore = storesResponse.data[0];
-                const metricsResponse = await backendApi.getStoreMetrics(firstStore.id, storeinoAuthResponse.data.accessToken);
-                
-                const merchant: MerchantData = {
-                  id: firstStore.id,
-                  name: firstStore.name,
-                  email: verifyResponse.data.user.email,
-                  storeUrl: firstStore.domain,
-                  plan: firstStore.plan,
-                  metrics: {
-                    monthlyVisitors: metricsResponse.data?.monthly_visitors || 0,
-                    conversionRate: metricsResponse.data?.conversion_rate || 0,
-                    averageCartValue: metricsResponse.data?.average_order_value || 0,
-                    totalOrders: metricsResponse.data?.total_orders || 0,
-                    totalRevenue: metricsResponse.data?.total_revenue || 0,
-                    customerCount: metricsResponse.data?.total_customers || 0,
-                    averageOrderFrequency: 2.5,
-                    customerLifespan: 18
-                  },
-                  lastUpdated: new Date().toISOString()
-                };
-                
-                setAuthState({
-                  isAuthenticated: true,
-                  merchant,
-                  loading: false,
-                  error: null
-                });
-              } else {
-                throw new Error('No stores found');
-              }
-            } else {
-              throw new Error('Failed to authenticate with Storeino');
-            }
-          } else {
-            throw new Error('Token verification failed');
-          }
-        } catch (error) {
-          console.error('Auth check error:', error);
-          backendApi.logout();
-          setAuthState({
-            isAuthenticated: false,
-            merchant: null,
-            loading: false,
-            error: null
-          });
-        }
-      }
-    };
-
-    checkAuthStatus();
-  }, []);
+  // For demo purposes, we'll skip the backend dependency
+  // and allow direct frontend-only usage
 
   const login = async (clientId: string, clientSecret: string) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));

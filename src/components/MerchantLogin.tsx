@@ -4,7 +4,7 @@ import { Language } from '../types';
 
 interface MerchantLoginProps {
   language: Language;
-  onLogin: (clientId: string, clientSecret: string) => Promise<void>;
+  onLogin: (clientId: string, clientSecret: string) => void;
   loading: boolean;
   error: string | null;
 }
@@ -19,13 +19,16 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   const [clientId, setClientId] = useState(import.meta.env.VITE_STOREINO_CLIENT_ID || '');
   const [clientSecret, setClientSecret] = useState(import.meta.env.VITE_STOREINO_CLIENT_SECRET || '');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (clientId && clientSecret) {
-      await onLogin(clientId, clientSecret);
+      onLogin(clientId, clientSecret);
     }
   };
 
+  const handleDemoMode = () => {
+    onLogin('demo', 'demo');
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md border border-slate-200 relative overflow-hidden">
@@ -136,6 +139,26 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
               )}
             </button>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-slate-500">
+                  {language === 'en' ? 'Or try demo mode' : 'Ou essayez le mode démo'}
+                </span>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleDemoMode}
+              className="mt-4 w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+            >
+              <span>{language === 'en' ? '🚀 Try Demo Mode' : '🚀 Mode Démo'}</span>
+            </button>
+          </div>
 
           <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
             <p className="text-blue-700 text-sm font-medium mb-2">
