@@ -1,7 +1,7 @@
 // Backend API Service - Secure communication with our Node.js backend
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_BASE_URL = ''; // Use relative URLs so requests go through Vite proxy
 
-console.log('🔗 Backend API connecting to:', BACKEND_BASE_URL);
+console.log('🔗 Backend API using Vite proxy to backend server');
 
 export interface BackendApiResponse<T> {
   success: boolean;
