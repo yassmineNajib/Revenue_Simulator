@@ -9,7 +9,7 @@ const authRoutes = require('./routes/auth.cjs');
 const storeinoRoutes = require('./routes/storeino.cjs');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 console.log(`🔧 Starting server on port ${PORT}`);
 
@@ -98,13 +98,17 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
   console.log(`📡 Test the API: curl http://localhost:${PORT}`);
   console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
 });
 
 server.on('error', (err) => {
   console.error('❌ Server error:', err);
   if (err.code === 'EADDRINUSE') {
-    console.log(`❌ Port ${PORT} is already in use`);
-    process.exit(1);
+    console.log(`❌ Port ${PORT} is already in use, trying port ${PORT + 1}`);
+    const newPort = PORT + 1;
+    server.listen(newPort, '0.0.0.0', () => {
+      console.log(`🚀 Backend server running on http://localhost:${newPort}`);
+    });
   }
 });
 
