@@ -473,6 +473,7 @@ router.get('/stores', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get stores error:', error);
     // Always return demo data on error to prevent "no stores found"
+    res.status(500).json({
       success: false,
       error: 'Failed to fetch stores'
     });
