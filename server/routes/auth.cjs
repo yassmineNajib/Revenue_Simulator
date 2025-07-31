@@ -1,15 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const Database = require('../database/init');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
-
-// Initialize database
-const db = new Database();
-db.init().catch(console.error);
 
 // Register endpoint (for demo purposes)
 router.post('/register', async (req, res) => {
@@ -24,7 +19,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await db.getUserByEmail(email);
+    const existingUser = await req.db.getUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -36,7 +31,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Store user in database
-    const user = await db.createUser(email, hashedPassword, storeinoClientId, storeinoClientSecret);
+    const user = await req.db.createUser(email, hashedPassword, storeinoClientId, storeinoClientSecret);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -77,7 +72,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user
-    const user = await db.getUserByEmail(email);
+    const user = await req.db.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,

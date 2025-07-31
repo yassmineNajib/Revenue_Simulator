@@ -1,15 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const fetch = require('node-fetch');
-const Database = require('../database/init');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const STOREINO_API_BASE = 'https://api-stores.storeino.com';
-
-// Initialize database
-const db = new Database();
-db.init().catch(console.error);
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -45,7 +40,7 @@ const getStoreinoCredentials = async (userId, type) => {
   }
   
   // For regular users, get from database
-  const user = await db.getUserById(userId);
+  const user = await req.db.getUserById(userId);
   if (!user) {
     return null;
   }
@@ -132,7 +127,7 @@ router.post('/authenticate', authenticateToken, async (req, res) => {
     console.log('🌐 Making request to Storeino API:', `${STOREINO_API_BASE}${endpoint}`);
     
     const result = await makeStoreinoRequest(endpoint, {
-      method: 'POST',
+      method: 'GET',
       body: JSON.stringify({
         clientId,
         clientSecret

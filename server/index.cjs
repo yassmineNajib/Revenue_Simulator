@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const Database = require('./database/init');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth.cjs');
@@ -12,6 +13,9 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 console.log(`🔧 Starting server on port ${PORT}`);
+
+// Initialize database once
+const db = new Database();
 
 // Security middleware
 app.use(helmet({
@@ -37,6 +41,12 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Make database available to routes
+app.use((req, res, next) => {
+  req.db = db;
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -94,27 +104,33 @@ app.use('*', (req, res) => {
   });
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`📡 Test the API: curl http://localhost:${PORT}`);
-  console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
-});
+// Initialize database and start server
+db.init().then(() => {
+  console.log('✅ Database initialized successfully');
+  
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+    console.log(`📡 Test the API: curl http://localhost:${PORT}`);
+    console.log(`🔐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
+  });
 
-server.on('error', (err) => {
-  console.error('❌ Server error:', err);
-  if (err.code === 'EADDRINUSE') {
-    console.log(`❌ Port ${PORT} is already in use, trying port 8081`);
-    const newPort = 8081;
-    server.listen(newPort, '0.0.0.0', () => {
-      console.log(`🚀 Backend server running on http://localhost:${newPort}`);
-    });
-  }
+  server.on('error', (err) => {
+    console.error('❌ Server error:', err);
+    if (err.code === 'EADDRINUSE') {
+      console.log(`❌ Port ${PORT} is already in use, trying port 8081`);
+      const newPort = 8081;
+      server.listen(newPort, '0.0.0.0', () => {
+        console.log(`🚀 Backend server running on http://localhost:${newPort}`);
+      });
+    }
+  });
+}).catch((error) => {
+  console.error('❌ Failed to initialize database:', error);
+  process.exit(1);
 });
 
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-  });
+  process.exit(0);
 });
