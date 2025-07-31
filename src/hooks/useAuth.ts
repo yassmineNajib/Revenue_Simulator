@@ -67,31 +67,10 @@ export const useAuth = () => {
             });
           } else {
             console.error('❌ No stores found or stores API failed:', storesResponse);
-            // Create a default merchant with demo data instead of failing
-            const merchant: MerchantData = {
-              id: 'demo_store_123',
-              name: 'Demo Fashion Store',
-              email: authResponse.data.user.email,
-              storeUrl: 'demo-fashion.storeino.com',
-              plan: 'startup',
-              metrics: {
-                monthlyVisitors: 5000,
-                conversionRate: 2.5,
-                averageCartValue: 350,
-                totalOrders: 125,
-                totalRevenue: 43750,
-                customerCount: 100,
-                averageOrderFrequency: 2.5,
-                customerLifespan: 18
-              },
-              lastUpdated: new Date().toISOString()
-            };
-            
             setAuthState(prev => ({
-              isAuthenticated: true,
-              merchant,
+              ...prev,
               loading: false,
-              error: null
+              error: storesResponse.error || 'No stores found for this account. Please check your credentials or contact support.'
             }));
           }
         } else {

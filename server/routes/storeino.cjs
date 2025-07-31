@@ -1,13 +1,15 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const fetch = require('node-fetch');
+const Database = require('../database/init');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const STOREINO_API_BASE = 'https://api-stores.storeino.com';
 
-// In-memory user store (same as auth.js - in production use shared database)
-const users = new Map();
+// Initialize database
+const db = new Database();
+db.init().catch(console.error);
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -33,24 +35,24 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Get Storeino credentials for authenticated user
-const getStoreinoCredentials = (userId, type) => {
+const getStoreinoCredentials = async (userId, type) => {
   if (type === 'storeino-direct') {
     // For direct Storeino login, credentials are in the token
     return {
       clientId: userId.replace('storeino-', ''),
-      clientSecret: process.env.STOREINO_CLIENT_SECRET // This should be passed differently
+      clientSecret: process.env.STOREINO_CLIENT_SECRET
     };
   }
   
-  // For regular users, get from user store
-  const user = users.get(userId);
+  // For regular users, get from database
+  const user = await db.getUserById(userId);
   if (!user) {
     return null;
   }
   
   return {
-    clientId: user.storeinoClientId,
-    clientSecret: user.storeinoClientSecret
+    clientId: user.storeino_client_id,
+    clientSecret: user.storeino_client_secret
   };
 };
 
@@ -139,15 +141,8 @@ router.post('/authenticate', authenticateToken, async (req, res) => {
 
     // If real API fails, fall back to demo mode
     if (!result.success) {
-      console.log('⚠️ Real API failed, using demo mode');
-      return res.json({
-        success: true,
-        data: {
-          accessToken: 'demo_access_token_' + Date.now(),
-          refreshToken: 'demo_refresh_token_' + Date.now(),
-          expireTime: 86400
-        }
-      });
+      console.log('⚠️ Real API failed:', result.error);
+      return res.json(result);
     }
 
     console.log('📡 Storeino API response:', result);
@@ -208,40 +203,15 @@ router.get('/stores', authenticateToken, async (req, res) => {
     // Handle API response
     if (!result.success) {
       console.error('❌ Real stores API failed:', result.error);
-      // Return demo data as fallback
-      console.log('⚠️ Using demo data as fallback');
-      return res.json({
-        success: true,
-        data: [
-          {
-            id: 'demo_store_123',
-            name: 'Demo Fashion Store',
-            domain: 'demo-fashion.storeino.com',
-            status: 'active',
-            plan: 'startup',
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: new Date().toISOString()
-          }
-        ]
-      });
+      return res.json(result);
     }
 
     // Check if data exists and is an array
     if (!result.data) {
-      console.log('⚠️ No data in API response, using demo data');
+      console.log('⚠️ No data in API response');
       return res.json({
-        success: true,
-        data: [
-          {
-            id: 'demo_store_123',
-            name: 'Demo Fashion Store',
-            domain: 'demo-fashion.storeino.com',
-            status: 'active',
-            plan: 'startup',
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: new Date().toISOString()
-          }
-        ]
+        success: false,
+        error: 'No stores data received from API'
       });
     }
 
@@ -262,56 +232,33 @@ router.get('/stores', authenticateToken, async (req, res) => {
       if (typeof stores === 'object' && stores.id) {
         stores = [stores];
       } else {
-        // Use demo data if we can't parse the response
-        console.log('⚠️ Cannot parse stores data, using demo data');
-        stores = [
-          {
-            id: 'demo_store_123',
-            name: 'Demo Fashion Store',
-            domain: 'demo-fashion.storeino.com',
-            status: 'active',
-            plan: 'startup',
-            created_at: '2024-01-01T00:00:00Z',
-            updated_at: new Date().toISOString()
-          }
-        ];
+        console.log('⚠️ Cannot parse stores data');
+        return res.json({
+          success: false,
+          error: 'Invalid stores data format received from API'
+        });
       }
     }
     
     // If stores array is empty, provide demo data
     if (stores.length === 0) {
-      console.log('⚠️ Empty stores array, using demo data');
-      stores = [
-        {
-          id: 'demo_store_123',
-          name: 'Demo Fashion Store',
-          domain: 'demo-fashion.storeino.com',
-          status: 'active',
-          plan: 'startup',
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: new Date().toISOString()
-        }
-      ];
+      console.log('⚠️ Empty stores array');
+      return res.json({
+        success: false,
+        error: 'No stores found for this account'
+      });
     }
 
     console.log('🏬 Stores API result:', JSON.stringify(result, null, 2));
-    res.json(result);
-  } catch (error) {
-    console.error('Get stores error:', error);
-    // Return demo data on error
     res.json({
       success: true,
-      data: [
-        {
-          id: 'demo_store_123',
-          name: 'Demo Fashion Store',
-          domain: 'demo-fashion.storeino.com',
-          status: 'active',
-          plan: 'startup',
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: new Date().toISOString()
-        }
-      ]
+      data: stores
+    });
+  } catch (error) {
+    console.error('Get stores error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch stores'
     });
   }
 });
@@ -359,45 +306,17 @@ router.get('/stores/:storeId/analytics', authenticateToken, async (req, res) => 
 
     // If real API fails, return demo data
     if (!result.success) {
-      console.log('⚠️ Real metrics API failed, using demo data');
-      return res.json({
-        success: true,
-        data: {
-          store_id: storeId,
-          total_orders: 125,
-          total_revenue: 43750,
-          total_customers: 100,
-          average_order_value: 350,
-          conversion_rate: 2.5,
-          monthly_visitors: 5000,
-          monthly_orders: 125,
-          monthly_revenue: 43750,
-          period_start: '2024-01-01',
-          period_end: '2024-01-31'
-        }
-      });
+      console.log('⚠️ Real metrics API failed');
+      return res.json(result);
     }
 
     console.log('📡 Storeino API response:', result);
     res.json(result);
   } catch (error) {
     console.error('Get store metrics error:', error);
-    // Return demo data on error
-    res.json({
-      success: true,
-      data: {
-        store_id: req.params.storeId,
-        total_orders: 125,
-        total_revenue: 43750,
-        total_customers: 100,
-        average_order_value: 350,
-        conversion_rate: 2.5,
-        monthly_visitors: 5000,
-        monthly_orders: 125,
-        monthly_revenue: 43750,
-        period_start: '2024-01-01',
-        period_end: '2024-01-31'
-      }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch store metrics'
     });
   }
 });

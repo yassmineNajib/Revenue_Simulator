@@ -1,13 +1,15 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const Database = require('../database/init');
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
-// In-memory user store (replace with database in production)
-const users = new Map();
+// Initialize database
+const db = new Database();
+db.init().catch(console.error);
 
 // Register endpoint (for demo purposes)
 router.post('/register', async (req, res) => {
@@ -22,7 +24,8 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    if (users.has(email)) {
+    const existingUser = await db.getUserByEmail(email);
+    if (existingUser) {
       return res.status(409).json({
         success: false,
         error: 'User already exists'
@@ -32,18 +35,12 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Store user (in production, save to database)
-    users.set(email, {
-      email,
-      password: hashedPassword,
-      storeinoClientId,
-      storeinoClientSecret,
-      createdAt: new Date().toISOString()
-    });
+    // Store user in database
+    const user = await db.createUser(email, hashedPassword, storeinoClientId, storeinoClientSecret);
 
     // Generate JWT token
     const token = jwt.sign(
-      { email, userId: email },
+      { email, userId: user.id },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -54,7 +51,7 @@ router.post('/register', async (req, res) => {
         token,
         user: {
           email,
-          createdAt: users.get(email).createdAt
+          createdAt: user.createdAt
         }
       }
     });
@@ -80,7 +77,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user
-    const user = users.get(email);
+    const user = await db.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -99,7 +96,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { email, userId: email },
+      { email, userId: user.id },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -110,7 +107,7 @@ router.post('/login', async (req, res) => {
         token,
         user: {
           email,
-          createdAt: user.createdAt
+          createdAt: user.created_at
         }
       }
     });
