@@ -119,7 +119,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-stone-100">
       <Header 
         language={language} 
         onLanguageChange={setLanguage}
@@ -164,7 +163,6 @@ function App() {
       </main>
       
       <footer className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-800 text-white py-16 mt-20">
-      <footer className="bg-gradient-to-r from-stone-900 via-amber-900 to-stone-800 text-white py-16 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="mb-6">
             <h4 className="text-4xl font-bold bg-gradient-to-r from-white to-amber-200 bg-clip-text text-transparent">
