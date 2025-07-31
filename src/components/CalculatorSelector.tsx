@@ -45,21 +45,21 @@ export const CalculatorSelector: React.FC<CalculatorSelectorProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 py-16">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-stone-100 py-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-4 rounded-2xl shadow-xl">
+            <div className="bg-gradient-to-r from-amber-600 to-amber-500 p-4 rounded-2xl shadow-xl">
               <Calculator className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-stone-800 to-amber-800 bg-clip-text text-transparent">
               Storeino Analytics
             </h1>
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-4">
+          <h2 className="text-3xl font-bold text-stone-800 mb-4">
             {language === 'en' ? 'Choose Your Calculator' : 'Choisissez Votre Calculateur'}
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-xl text-stone-600 max-w-3xl mx-auto">
             {language === 'en' 
               ? 'Select the type of analysis you want to perform with your store data'
               : 'Sélectionnez le type d\'analyse que vous souhaitez effectuer avec vos données de magasin'
@@ -71,17 +71,17 @@ export const CalculatorSelector: React.FC<CalculatorSelectorProps> = ({
           {calculators.map((calc) => (
             <div
               key={calc.type}
-              className="bg-white rounded-3xl shadow-2xl p-10 border border-slate-200 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group"
+              className="bg-white rounded-3xl shadow-2xl p-10 border border-stone-200 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer group"
               onClick={() => onSelectCalculator(calc.type)}
             >
               <div className="text-center mb-8">
                 <div className={`bg-gradient-to-r ${calc.color} p-6 rounded-2xl inline-block mb-6 group-hover:scale-110 transition-transform duration-300`}>
                   <calc.icon className="w-16 h-16 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-slate-800 mb-4">
+                <h3 className="text-3xl font-bold text-stone-800 mb-4">
                   {calc.title}
                 </h3>
-                <p className="text-slate-600 text-lg leading-relaxed">
+                <p className="text-stone-600 text-lg leading-relaxed">
                   {calc.description}
                 </p>
               </div>
@@ -90,7 +90,7 @@ export const CalculatorSelector: React.FC<CalculatorSelectorProps> = ({
                 {calc.features.map((feature, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${calc.color}`}></div>
-                    <span className="text-slate-700 font-medium">{feature}</span>
+                    <span className="text-stone-700 font-medium">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -106,16 +106,16 @@ export const CalculatorSelector: React.FC<CalculatorSelectorProps> = ({
         </div>
 
         <div className="mt-16 text-center">
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-slate-800 mb-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-stone-200 max-w-2xl mx-auto">
+            <h3 className="text-2xl font-bold text-stone-800 mb-4">
               {language === 'en' ? 'Why Use Our Calculators?' : 'Pourquoi Utiliser Nos Calculateurs?'}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               <div>
-                <h4 className="font-bold text-slate-700 mb-2">
+                <h4 className="font-bold text-stone-700 mb-2">
                   {language === 'en' ? '📊 Data-Driven Insights' : '📊 Insights Basés sur les Données'}
                 </h4>
-                <p className="text-slate-600 text-sm">
+                <p className="text-stone-600 text-sm">
                   {language === 'en' 
                     ? 'Make informed decisions based on your actual store performance'
                     : 'Prenez des décisions éclairées basées sur les performances réelles de votre magasin'
@@ -123,10 +123,10 @@ export const CalculatorSelector: React.FC<CalculatorSelectorProps> = ({
                 </p>
               </div>
               <div>
-                <h4 className="font-bold text-slate-700 mb-2">
+                <h4 className="font-bold text-stone-700 mb-2">
                   {language === 'en' ? '🎯 Optimize Growth' : '🎯 Optimiser la Croissance'}
                 </h4>
-                <p className="text-slate-600 text-sm">
+                <p className="text-stone-600 text-sm">
                   {language === 'en' 
                     ? 'Identify opportunities to increase revenue and customer value'
                     : 'Identifiez les opportunités d\'augmenter les revenus et la valeur client'
