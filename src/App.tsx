@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { MerchantLogin } from './components/MerchantLogin';
+import { CalculatorSelector } from './components/CalculatorSelector';
+import { CLVCalculator } from './components/CLVCalculator';
 import { Header } from './components/Header';
 import { InputForm } from './components/InputForm';
 import { ResultsDisplay } from './components/ResultsDisplay';
@@ -9,8 +11,11 @@ import { useAuth } from './hooks/useAuth';
 import { SimulationInputs, SimulationResults, Language } from './types';
 import { calculateRevenue } from './utils/calculations';
 
+type CalculatorType = 'revenue' | 'clv' | null;
+
 function App() {
   const [language, setLanguage] = useState<Language>('en');
+  const [selectedCalculator, setSelectedCalculator] = useState<CalculatorType>(null);
   const { isAuthenticated, merchant, loading, error, login, logout } = useAuth();
   const [inputs, setInputs] = useState<SimulationInputs>({
     monthlyVisitors: 0,
@@ -33,6 +38,28 @@ function App() {
     );
   }
 
+  // If authenticated but no calculator selected, show calculator selector
+  if (!selectedCalculator) {
+    return (
+      <CalculatorSelector
+        language={language}
+        onSelectCalculator={setSelectedCalculator}
+      />
+    );
+  }
+
+  // If CLV calculator is selected
+  if (selectedCalculator === 'clv' && merchant) {
+    return (
+      <CLVCalculator
+        language={language}
+        merchant={merchant}
+        onBack={() => setSelectedCalculator(null)}
+      />
+    );
+  }
+
+  // Revenue calculator (default)
   const handleInputChange = (field: keyof SimulationInputs, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
   };
@@ -44,9 +71,9 @@ function App() {
 
   const handleReset = () => {
     setInputs({
-      monthlyVisitors: 0,
-      conversionRate: 0,
-      averageCartValue: 0,
+      monthlyVisitors: merchant?.metrics.monthlyVisitors || 0,
+      conversionRate: merchant?.metrics.conversionRate || 0,
+      averageCartValue: merchant?.metrics.averageCartValue || 0,
       storeinoFees: 0,
       otherCosts: 0
     });
@@ -76,6 +103,19 @@ function App() {
     }
   };
 
+  // Pre-fill inputs with merchant data if available
+  React.useEffect(() => {
+    if (merchant && inputs.monthlyVisitors === 0) {
+      setInputs({
+        monthlyVisitors: merchant.metrics.monthlyVisitors || 5000,
+        conversionRate: merchant.metrics.conversionRate || 2.5,
+        averageCartValue: merchant.metrics.averageCartValue || 350,
+        storeinoFees: 169, // Default to startup plan
+        otherCosts: 500
+      });
+    }
+  }, [merchant, inputs.monthlyVisitors]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <Header 
@@ -86,6 +126,18 @@ function App() {
       />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+        <div className="text-center mb-8">
+          <button
+            onClick={() => setSelectedCalculator(null)}
+            className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 mb-4"
+          >
+            ← {language === 'en' ? 'Back to Calculator Selection' : 'Retour à la Sélection'}
+          </button>
+          <h2 className="text-3xl font-bold text-slate-800">
+            {language === 'en' ? 'Revenue Calculator' : 'Calculateur de Revenus'}
+          </h2>
+        </div>
+
         <InputForm
           inputs={inputs}
           onInputChange={handleInputChange}

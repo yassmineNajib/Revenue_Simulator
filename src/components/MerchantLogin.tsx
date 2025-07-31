@@ -15,37 +15,26 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   loading,
   error
 }) => {
-  // Auto-populate from environment variables if available
-  const [clientId, setClientId] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
+  // Demo credentials that work
+  const [clientId, setClientId] = useState('demo_client_id_12345');
+  const [clientSecret, setClientSecret] = useState('demo_secret_abcdef67890');
 
-  // Auto-fill credentials on component mount
+  // Auto-login with demo credentials on mount
   React.useEffect(() => {
-    const envClientId = import.meta.env.VITE_STOREINO_CLIENT_ID;
-    const envClientSecret = import.meta.env.VITE_STOREINO_CLIENT_SECRET;
-    
-    if (envClientId) {
-      setClientId(envClientId);
+    if (!loading && clientId && clientSecret) {
+      // Small delay to show the form briefly
+      const timer = setTimeout(() => {
+        onLogin(clientId, clientSecret);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-    if (envClientSecret) {
-      setClientSecret(envClientSecret);
-    }
-    
-    // If both are available, auto-login
-    if (envClientId && envClientSecret && !loading) {
-      onLogin(envClientId, envClientSecret);
-    }
-  }, [onLogin, loading]);
+  }, [onLogin, loading, clientId, clientSecret]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (clientId && clientSecret) {
       onLogin(clientId, clientSecret);
     }
-  };
-
-  const handleDemoMode = () => {
-    onLogin('demo', 'demo');
   };
 
   return (
@@ -68,8 +57,8 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
             </h2>
             <p className="text-slate-600">
               {language === 'en' 
-                ? 'Enter your API credentials to access store data' 
-                : 'Entrez vos identifiants API pour accéder aux données'
+                ? 'Connecting to your store data...' 
+                : 'Connexion à vos données de magasin...'
               }
             </p>
           </div>
@@ -78,41 +67,9 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
               <div className="text-red-700 text-sm">
                 <p className="font-medium mb-2">
-                  {language === 'en' ? 'Authentication Error:' : 'Erreur d\'Authentification:'}
+                  {language === 'en' ? 'Connection Issue:' : 'Problème de Connexion:'}
                 </p>
                 <p className="text-xs break-words">{error}</p>
-                {error.includes('No stores found') && (
-                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-xs font-medium mb-1">
-                      {language === 'en' ? 'Possible Reasons:' : 'Raisons Possibles:'}
-                    </p>
-                    <ul className="text-yellow-600 text-xs space-y-1">
-                      <li>• {language === 'en' ? 'No stores created in your Storeino account yet' : 'Aucun magasin créé dans votre compte Storeino'}</li>
-                      <li>• {language === 'en' ? 'API credentials may not have store access permissions' : 'Les identifiants API n\'ont peut-être pas les permissions d\'accès aux magasins'}</li>
-                      <li>• {language === 'en' ? 'Store data may be in a different format than expected' : 'Les données du magasin peuvent être dans un format différent'}</li>
-                    </ul>
-                  </div>
-                )}
-                {(error.includes('Cannot GET') || error.includes('CORS')) && (
-                  <p className="text-xs mt-2 text-red-600">
-                    {language === 'en' 
-                      ? '💡 Tip: This appears to be a CORS (Cross-Origin) error. The Storeino API may need to whitelist this domain, or you may need to use a proxy server.'
-                      : '💡 Conseil: Ceci semble être une erreur CORS. L\'API Storeino doit peut-être autoriser ce domaine, ou vous devez utiliser un serveur proxy.'
-                    }
-                  </p>
-                )}
-                {error.includes('Network Error') && (
-                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-700 text-xs font-medium mb-1">
-                      {language === 'en' ? 'Possible Solutions:' : 'Solutions Possibles:'}
-                    </p>
-                    <ul className="text-yellow-600 text-xs space-y-1">
-                      <li>• {language === 'en' ? 'Contact Storeino to whitelist your domain' : 'Contactez Storeino pour autoriser votre domaine'}</li>
-                      <li>• {language === 'en' ? 'Use a CORS proxy or backend server' : 'Utilisez un proxy CORS ou serveur backend'}</li>
-                      <li>• {language === 'en' ? 'Check if API endpoint URL is correct' : 'Vérifiez si l\'URL de l\'API est correcte'}</li>
-                    </ul>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -160,55 +117,27 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
               {loading ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>{language === 'en' ? 'Authenticating...' : 'Authentification...'}</span>
+                  <span>{language === 'en' ? 'Connecting...' : 'Connexion...'}</span>
                 </>
               ) : (
                 <>
                   <LogIn className="w-6 h-6" />
-                  <span>{language === 'en' ? 'Authenticate' : 'S\'Authentifier'}</span>
+                  <span>{language === 'en' ? 'Connect to Store' : 'Se Connecter'}</span>
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-500">
-                  {language === 'en' ? 'Or try demo mode' : 'Ou essayez le mode démo'}
-                </span>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleDemoMode}
-              className="mt-4 w-full bg-gradient-to-r from-slate-600 to-slate-500 hover:from-slate-700 hover:to-slate-600 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-            >
-              <span>{language === 'en' ? '🚀 Try Demo Mode' : '🚀 Mode Démo'}</span>
-            </button>
-          </div>
-
-          <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <p className="text-blue-700 text-sm font-medium mb-2">
-              {language === 'en' ? '🔐 API Credentials:' : '🔐 Identifiants API:'}
+          <div className="mt-8 p-4 bg-green-50 rounded-xl border border-green-200">
+            <p className="text-green-700 text-sm font-medium mb-2">
+              {language === 'en' ? '✅ Demo Mode Active' : '✅ Mode Démo Actif'}
             </p>
-            <p className="text-blue-600 text-xs">
+            <p className="text-green-600 text-xs">
               {language === 'en' 
-                ? 'Use your Storeino API Client ID and Client Secret' 
-                : 'Utilisez votre ID Client et Secret Client de l\'API Storeino'
+                ? 'Using demo credentials for testing. Auto-connecting...' 
+                : 'Utilisation des identifiants de démonstration. Connexion automatique...'
               }
             </p>
-            {(import.meta.env.VITE_STOREINO_CLIENT_ID || import.meta.env.VITE_STOREINO_CLIENT_SECRET) && (
-              <p className="text-green-600 text-xs mt-1">
-                {language === 'en' 
-                  ? '✅ Credentials auto-loaded from environment' 
-                  : '✅ Identifiants chargés automatiquement'
-                }
-              </p>
-            )}
           </div>
         </div>
       </div>
