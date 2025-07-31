@@ -63,29 +63,32 @@ class BackendApiService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Response error:', errorText);
+        let data;
+        try {
+          data = JSON.parse(errorText);
+        } catch {
+          data = null;
+        }
         return {
+          success: false,
           error: data?.message || data?.error || `Server returned error ${response.status}. Please check your credentials and try again.`,
-          error: `HTTP ${response.status}: ${errorText}`
         };
       }
 
       const data = await response.json();
       console.log('📊 Response data:', data);
-        if (textResponse.includes('Cannot GET') || textResponse.includes('<!DOCTYPE html>') || textResponse.includes('Page not found')) {
-        }
       return {
         success: true,
         data: data.data || data
-            error: 'Backend server is not running or not accessible. Please check if the backend server is started on port 8080.'
-          } catch (error) {
+      };
+    } catch (error) {
       console.error('❌ Backend API Error:', error);
       
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         return {
           success: false,
-          error: `Server Error: Unable to connect to backend API (HTTP ${response.status}). Please ensure the backend server is running.`
           error: 'Network Error: Cannot connect to backend server. Please ensure the backend server is running on port 8080 and try again.'
-              }
+        };
       }
       
       return {
@@ -93,7 +96,6 @@ class BackendApiService {
         error: error instanceof Error ? `Connection Error: ${error.message}` : 'Unknown network error occurred'
       };
     }
-      }
   }
 
   // Test backend connection
