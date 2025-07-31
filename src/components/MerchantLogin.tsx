@@ -16,8 +16,26 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
   error
 }) => {
   // Auto-populate from environment variables if available
-  const [clientId, setClientId] = useState(import.meta.env.VITE_STOREINO_CLIENT_ID || '');
-  const [clientSecret, setClientSecret] = useState(import.meta.env.VITE_STOREINO_CLIENT_SECRET || '');
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+
+  // Auto-fill credentials on component mount
+  React.useEffect(() => {
+    const envClientId = import.meta.env.VITE_STOREINO_CLIENT_ID;
+    const envClientSecret = import.meta.env.VITE_STOREINO_CLIENT_SECRET;
+    
+    if (envClientId) {
+      setClientId(envClientId);
+    }
+    if (envClientSecret) {
+      setClientSecret(envClientSecret);
+    }
+    
+    // If both are available, auto-login
+    if (envClientId && envClientSecret && !loading) {
+      onLogin(envClientId, envClientSecret);
+    }
+  }, [onLogin, loading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
