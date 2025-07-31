@@ -116,7 +116,17 @@ export const MerchantLogin: React.FC<MerchantLoginProps> = ({
                 <p className="font-medium mb-2">
                   {t.connectionIssue}
                 </p>
-                <p className="text-xs break-words">{error}</p>
+                <div className="text-xs break-words space-y-2">
+                  <p>{error}</p>
+                  {error.includes('backend server') && (
+                    <div className="bg-red-100 p-2 rounded border-l-4 border-red-400">
+                      <p className="font-medium">💡 Quick Fix:</p>
+                      <p>1. Make sure the backend server is running</p>
+                      <p>2. Check if port 8080 is accessible</p>
+                      <p>3. Verify your Storeino API credentials</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

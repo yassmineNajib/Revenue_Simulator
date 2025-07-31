@@ -77,21 +77,21 @@ export const useAuth = () => {
           setAuthState(prev => ({
             ...prev,
             loading: false,
-            error: storeinoAuthResponse.error || 'Failed to authenticate with Storeino'
+            error: authResponse.error || 'Authentication failed. Please check your Storeino credentials and ensure the backend server is running.'
           }));
         }
       } else {
         setAuthState(prev => ({
           ...prev,
           loading: false,
-          error: authResponse.error || 'Login failed'
+          error: authResponse.error || 'Login failed. Please verify your Client ID and Client Secret are correct.'
         }));
       }
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Login failed'
+        error: error instanceof Error ? `Login Error: ${error.message}` : 'Login failed due to unknown error'
       }));
     }
   };
