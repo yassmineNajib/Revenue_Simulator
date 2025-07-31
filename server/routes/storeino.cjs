@@ -137,7 +137,7 @@ router.post('/authenticate', authenticateToken, async (req, res) => {
     console.log('🌐 Making request to Storeino API:', `${STOREINO_API_BASE}${endpoint}`);
     
     const result = await makeStoreinoRequest(endpoint, {
-      method: 'GET'  // According to Storeino docs, authentication is GET
+      method: 'POST'  // According to Storeino docs, authentication is POST
     });
 
     console.log('📡 Storeino API response:', result);
