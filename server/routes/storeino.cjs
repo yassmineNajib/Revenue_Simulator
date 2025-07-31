@@ -124,11 +124,15 @@ router.post('/authenticate', authenticateToken, async (req, res) => {
     }
 
     // For real credentials, try actual API call
-    const endpoint = `/v1/stores/authentication?clientId=${encodeURIComponent(clientId)}&clientSecret=${encodeURIComponent(clientSecret)}`;
+    const endpoint = `/v1/stores/authentication`;
     console.log('🌐 Making request to Storeino API:', `${STOREINO_API_BASE}${endpoint}`);
     
     const result = await makeStoreinoRequest(endpoint, {
-      method: 'GET'  // According to API docs, authentication is GET
+      method: 'POST',
+      body: JSON.stringify({
+        clientId: clientId,
+        clientSecret: clientSecret
+      })
     });
 
     // If real API fails, fall back to demo mode
